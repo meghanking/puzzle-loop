@@ -1,0 +1,40 @@
+A plain text, PDF, or Word file of your written report should be turned in on this date (1-2 pages in length). This report will detail what intelligence you intend to implement in your program. Note: you might not be able (due to time until the end of the semester, time limits for a move, and space within the machine) to fully implement all of this. Your report should therefore be structured to contain the following two sections:
+1.	This is what I will definitely try to implement and 
+
+When there are clear constraints on each square, limiting the representations of each square utilizing those constraints. The many I have discovered while playing the program are the following:
+
+Each intersection (also seen on the online version as a dot, and in out version as a +) can only hold these representations:
+•	2 lines and 2 x’s
+•	4 lines
+This allows me, and hopefully the program, to narrow down the representations of each of these intersections, which can be done in the following cases
+•	there are 3 x’s
+o	the other part has to be an x, if not -> dangling end
+•	there is one line and there are 2 x’s
+o	the other part of the intersection has to be a line, if not, a dangling end
+•	there are 2 lines
+o	all other parts must be x’s, if not there is a loop in the circuit
+
+The number restrictions can be used alongside the  intersection restrictions to gain more insight on the line placement
+
+each square is limited in their representations
+
+figuring out if a potential move is a closed loop can certainly be implemented and has been implemented to help the human playing the game
+
+figuring out is something is a dangling end and closed loop is solved if the implementation of intersections is done correctly.
+
+These are detected and taken care of in the human interactive mode of the game as well.. because I warn them when they do it…
+
+Having it so a 0 cannot have any lines is the best beginning, which can easily be done. Then those on the corners are also easy (and should already be set in the beginning of the process and therefore be picked up by the representations immediately
+
+using map… functions to implement the functions on lists… and maybe putting the values to evaluate in a queue to speed up the process and not waste clock cycles
+
+
+
+
+
+2.	This is what I would love to implement provided I don't have any major difficulties. 
+Be able to play a game, or even start a game, if there is no clear restrictions on any of the intersections or squares in the game, forcing for a real search process to occur, with branching occurring
+
+it would be cool to have the different map representations to be put in a list, and have each be implemented using map functions… then knowing eventually that something lead to a dead end, and going back (and hopefully remembering you made that mistake and not go in that direction)
+
+

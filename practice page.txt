@@ -1,0 +1,14 @@
+;;These are sample maps to use for testing
+
+((3) (3))
+
+((2 2 NIL NIL NIL) (NIL 2 NIL 2 2) (NIL NIL 3 NIL NIL) (NIL NIL 0 NIL NIL)
+ (3 NIL 3 NIL NIL))
+ 
+ ((3 0 3))
+ 
+ ((4))
+ 
+ ((2 2) (2 2))
+ 
+ ((1 0) (3 NIL) (2 NIL))
