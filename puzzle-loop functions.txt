@@ -1,11 +1,11 @@
-q: the instructions say there are ways to do moves, should we allow the user to undo a move? like if they input something incorrectly...
-a: he explicitly says other extra features to be part of the user interface
-
-extra things I may want to add:
-	being able to end the map you are on at any time
- 	being able to clear a line... or undo a move.... clear a line.
- 	saying that you want an x... nope don't care (i do in back end, but dont print and don't let user do it I guess
- 	
+;; q: the instructions say there are ways to do moves, should we allow the user to undo a move? like if they input something incorrectly...
+;; a: he explicitly says other extra features to be part of the user interface
+;; 
+;; extra things I may want to add:
+;; 	being able to end the map you are on at any time
+;;  	being able to clear a line... or undo a move.... clear a line.
+;;  	saying that you want an x... nope don't care (i do in back end, but dont print and don't let user do it I guess
+;;  	
  
 ;; Implementation restrictions:
 ;; 
@@ -22,8 +22,6 @@ extra things I may want to add:
 ;; 4 	The main routine for your program should be called “slither”
 ;;
 ;; 5	once a solution is found, the game must ask if you want to play another game, repeating the process of gameplay
-
-
 
 
 ;;list of variables to know:
@@ -91,9 +89,9 @@ extra things I may want to add:
 )
 
 
-how to represent the lines and dots and all that shit
-have all the dots, each has 4 lines
-have a square, each having the representations it can have along with the 4 dots that it is associated with..
-representations are gonna be... mad hard to do... like I think yeah
+;; how to represent the lines and dots and all that shit
+;; have all the dots, each has 4 lines
+;; have a square, each having the representations it can have along with the 4 dots that it is associated with..
+;; representations are gonna be... mad hard to do... like I think yeah
 
 
