@@ -51,26 +51,91 @@
 "create the representations for dotrepmap and linerepmap for the mapcontents passed into the parameters and updates the currentmap"
 (setq rownum (list-length (eval mapname)))
 (setq colnum (list-length (car (eval mapname))))
-(setq dotrepmap (makedotrepmap rownum colnum))
+(setq linerepmap (makelinerepmap rownum colnum))
 (setq currentmap '(mapname linerepmap dotrepmap rownum colnum))
 )
 
-# scratch making dot rep... make linerep and derive dots each time you do it I think will be better. 
+
+
+;;------------------------
+
+;; scratch making dot rep... make linerep and derive dots each time you do it I think will be better. 
+;; number of linerows is linerownum
+;; number of columns in even number rows is linecoleven 
+;; number of columns in odd number rows is linecolodd
+;; DO NOT ADD IN THE DESCRPIPTION BECAUSE IT ERRORED OUT and it was annoying...
+
 
 (defun makelinerepmap (rownum colnum)
-“create the line representation of the map”
 
+	(loop for i from 1 to (+ (* rownum 2) 1) collect
+		(cond 
+			((equal 1 i) 
+				(makefirstlastrow (+ colnum 1))
+			)
+			((equal (+ (* rownum 2) 1) i)
+				(makefirstlastrow (+ colnum 1))
+			)
+			((equal (mod i 2) 0)
+				(makeevenrow (+ colnum 2))
+			)
+			(t 
+				(makemiddleoddrow (+ colnum 1))
+			)
+		)
+	)
+)
 
+;;------------------------
+;; if its the first or the last row, fill the (always will be in an odd row) elements which there are linecolodd in number all with all x's
+
+(defun makefirstlastrow (linecolodd)
+"creates the first and last rows of the linerepmap given the number of columns"
+
+	(loop for i from 1 to linecolodd collect (list 'x)
+	)
 )
 
 
+;;------------------------
+;; if the row is odd, make linecolodd sublists with nothing in them
+
+(defun makemiddleoddrow (linecolodd)
+"creates the other odd rows that are not the first and last of the linerepmap given the number of columns"
+
+	(loop for i from 1 to linecolodd collect (list 'empty)
+	)
+)
+
+
+;;------------------------
+
+;;if the row is even, make linecoleven sublists with all x's
+
+(defun makeevenrow (linecoleven)
+"creates the other even rows of the linerepmap given the number of columns"
+
+	(loop for i from 1 to linecoleven collect 
+		(cond 
+			((equal i 1) (list 'x))
+			((equal i linecoleven) (list 'x))
+			(t (list 'empty))
+		)
+	)
+)
+
+;; (loop for i from 1 to linecoleven collect (cond ((equal i 1)
+;;                                         (list 'x)) (t (list 'y))))
+
+
+;;------------------------
 
 (defun makemove (rownum colnum sidetoplaceline)
 "allows a line to be drawn on the map given the placement of the line"
 
 )
 
-
+;;------------------------
 
 (defun isclosedcircut (lineplacement)
 "given a starting line, tests to see if this line is contained in a closed loop"
@@ -93,15 +158,23 @@
 
 )
 
+;;------------------------
+
 (defun printmap (currentmaps)
 "given a currentmaps object, will print out the map and line representation of the current map. with row and columns numbered"
+
+
 
 )
 
 
-;; how to represent the lines and dots and all that shit
-;; have all the dots, each has 4 lines
-;; have a square, each having the representations it can have along with the 4 dots that it is associated with..
-;; representations are gonna be... mad hard to do... like I think yeah
+;;------------------------
+
+(defun printevenrow (rowtoprint linerepmap)
 
 
+)
+
+;;------------------------
+
+(defun printoddrow  (rowtoprint linerepmap mapcontents)
