@@ -55,60 +55,12 @@
 (setq currentmap '(mapname linerepmap dotrepmap rownum colnum))
 )
 
-(defun makedotrepmap (rownum colnum)
-“create the dot representation of the map”
+# scratch making dot rep... make linerep and derive dots each time you do it I think will be better. 
 
-;; create the empty list itself
-;; each element is a list of 4 elements.. the top right bottom left, in that order
-;; 
-;; loop should:
-;; 
-;; create a list
-;; 
-;; assign top
-;; assign right
-;; assign bottom
-;; assign left
-;; 
-;; add to correct sublist
-;; 
-;; increment currentrow/colnum
-;; go to next element (to the right… sure or next line) until you run out
-
-;; keep track of column number and row number
-(setq currentrownum 0)
-(seta currentcolnum 0)
-
-;; create a list
-(list …
+(defun makelinerepmap (rownum colnum)
+“create the line representation of the map”
 
 
-;; if not on top set top to cddar (or cddaar) of element above
-;; if on top assign top to never
-(cond 
-((equal currentrownum 0) nil)
-(t (cddar dotmaprep))
-)
-;; if on right side assign right to never
-;; if not on right side assign right one to empty
-(cond
-((equal currentcolnum colnum) nil)
-(t empty)
-)
-
-;; if not on bottom assign bottom to empty
-;; if on bottom assign bottom to never
-(cond
-((equal currentrownum rownum) nil)
-(t empty)
-)
-;; if on left side assign left to never
-;; if not on left set left to cdar (or cdaar) of element before
-(cond
-((equal currentcolnum 0) nil)
-(t (cdar of element before this one...))
-)
-;; use row numbers and column numbers to iterate to that exact element... which i should have a general function to do this anyways because the game will be like that always...
 )
 
 
