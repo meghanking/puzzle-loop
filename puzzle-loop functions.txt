@@ -1,141 +1,54 @@
-;; q: the instructions say there are ways to do moves, should we allow the user to undo a move? like if they input something incorrectly...
-;; a: he explicitly says other extra features to be part of the user interface
-;; 
-;; extra things I may want to add:
-;; 	being able to end the map you are on at any time
-;;  	being able to clear a line... or undo a move.... clear a line.
-;;  	saying that you want an x... nope don't care (i do in back end, but dont print and don't let user do it I guess
-;;  	
- 
-;; Implementation restrictions:
-;; 
-;; 1	Each move will be specified as a triple – two numbers separated by a blank followed by blank and a letter: N N L. 
-;; 	No other punctuation or characters is allowed. 
-;; 	The two numbers will identify the row then column (starting in the upper left corner) where a line will be added and the letter will identify the line’s position on the square (T for top, B for bottom, L for left, and R for right)
-;; 
-;; 2	(e.g., numbering the rows and columns are highly recommended)
-;; 
-;; 3	Each student will turn in a textual copy of their program 
-;; (not compiled) on this date with a README.TXT plain text file describing 
-;; how to execute your program. 
-;;
-;; 4 	The main routine for your program should be called “slither”
-;;
-;; 5	once a solution is found, the game must ask if you want to play another game, repeating the process of gameplay
+(defun makemap (mapname mapcontents)
 
-
-;;list of variables to know:
-;;rownum -> number of rows in the current map
-;;colnum -> number of columns in the current map
-;;currentmap -> list containing (mapname linerepmap dotrepmap rownum colnum) of the current map
-;;linecount -> the number of lines drawn on the current map
-;;maplist -> list containing all the maps predefined in the program currently
-
-;;list of functions to know:
-;;isClosedCircut -> given a lineplacement and the linerepmap, will determine if the line is contained in a closed circuit in this map
-;;
-;;makemap -> creates a puzzle-loop map with name given as first parameter and contents given as second parameter
-;;				sets the mapname and adds the maoname to the maplist
-;;
-;;makerepresentation -> creates reps for currentmap. sets currentmap with mapname linerepmap dotrepmap rownum and colnum. setting all those variables as well
-;;
-
-(defun makemap 
-(mapname mapcontents)
- "creates a puzzle-loop map with name given as first parameter and contents given as second parameter"
- (set mapname mapcontents)
- (setq maplist (append maplist (list mapname)))
+	 (set mapname mapcontents)
+	 (setq maplist (append maplist (list mapname)))
  )
 
+;;------------------------
+
 (defun makerepresentations (mapname) 
-"create the representations for dotrepmap and linerepmap for the mapcontents passed into the parameters and updates the currentmap"
-(setq rownum (list-length (eval mapname)))
-(setq colnum (list-length (car (eval mapname))))
-(setq linerepmap (makelinerepmap rownum colnum))
-(setq currentmap '(mapname linerepmap dotrepmap rownum colnum))
+
+	(setq rownum (list-length (eval mapname)))
+	(setq colnum (list-length (car (eval mapname))))
+	(setq linerepmap (makelinerepmap rownum colnum))
+	(setq currentmap (list mapname linerepmap rownum colnum))
 )
 
 
 
 ;;------------------------
-
-;; scratch making dot rep... make linerep and derive dots each time you do it I think will be better. 
-;; number of linerows is linerownum
-;; number of columns in even number rows is linecoleven 
-;; number of columns in odd number rows is linecolodd
-;; DO NOT ADD IN THE DESCRPIPTION BECAUSE IT ERRORED OUT and it was annoying...
-
 
 (defun makelinerepmap (rownum colnum)
 
 	(loop for i from 1 to (+ (* rownum 2) 1) collect
 		(cond 
-			((equal 1 i) 
-				(makefirstlastrow (+ colnum 1))
-			)
-			((equal (+ (* rownum 2) 1) i)
-				(makefirstlastrow (+ colnum 1))
+			((or (equal 1 i) (equal (+ (* rownum 2) 1) i))
+				(make-sequence 'list (+ 1 colnum) :initial-element 'xx
+	)
 			)
 			((equal (mod i 2) 0)
-				(makeevenrow (+ colnum 2))
+				(append 
+					(list 'xx) 
+					(make-sequence 'list colnum :initial-element 'empty) 
+					(list 'xx)
+				)
 			)
 			(t 
-				(makemiddleoddrow (+ colnum 1))
+				(make-sequence 'list (+ colnum 1) :initial-element 'empty
+				)
 			)
 		)
 	)
 )
 
 ;;------------------------
-;; if its the first or the last row, fill the (always will be in an odd row) elements which there are linecolodd in number all with all x's
-
-(defun makefirstlastrow (linecolodd)
-"creates the first and last rows of the linerepmap given the number of columns"
-
-	(loop for i from 1 to linecolodd collect (list 'x)
-	)
-)
-
-
-;;------------------------
-;; if the row is odd, make linecolodd sublists with nothing in them
-
-(defun makemiddleoddrow (linecolodd)
-"creates the other odd rows that are not the first and last of the linerepmap given the number of columns"
-
-	(loop for i from 1 to linecolodd collect (list 'empty)
-	)
-)
-
-
-;;------------------------
-
-;;if the row is even, make linecoleven sublists with all x's
-
-(defun makeevenrow (linecoleven)
-"creates the other even rows of the linerepmap given the number of columns"
-
-	(loop for i from 1 to linecoleven collect 
-		(cond 
-			((equal i 1) (list 'x))
-			((equal i linecoleven) (list 'x))
-			(t (list 'empty))
-		)
-	)
-)
-
-;; (loop for i from 1 to linecoleven collect (cond ((equal i 1)
-;;                                         (list 'x)) (t (list 'y))))
-
-
-;;------------------------
-
+;;unimplemented
 (defun makemove (rownum colnum sidetoplaceline)
-"allows a line to be drawn on the map given the placement of the line"
 
 )
 
 ;;------------------------
+;;unimplemented
 
 (defun isclosedcircut (lineplacement)
 "given a starting line, tests to see if this line is contained in a closed loop"
@@ -159,22 +72,81 @@
 )
 
 ;;------------------------
+# utilizes
+# 	printevenrow
+# 		convertsymboleven
+# 	printoddrow
+# 		convertsymbolodd
 
-(defun printmap (currentmaps)
-"given a currentmaps object, will print out the map and line representation of the current map. with row and columns numbered"
+(defun printmap (currentmap)
 
-
-
+	(loop for i from 2 to (* (caddr currentmap)) collect
+		(cond
+			((equal 0 (mod i 2))
+				(printroweven i (cadr currentmap))
+			)
+			(t
+				(printrowodd i (cadr currentmap))
+			)
+		)
+	)
 )
 
+;;------------------------
+
+(defun convertsymboleven (symboltoconvert)
+
+	(cond 
+		((equal 'xx symboltoconvert) 
+			'x
+		)
+		((equal 'x symboltoconvert )
+			'x
+		)
+		((equal 'empty symboltoconvert )
+			'*
+		)
+		((equal 'line symboltoconvert )
+			'-
+		)
+	)
+)
+
+;;------------------------
+
+(defun convertsymbolodd (symbol)
+
+	(cond 
+		((equal 'xx symbol) 
+			'x
+		)
+		((equal 'x symbol) 
+			'*
+		)
+		((equal 'empty symbol)
+			'*
+		)
+		((equal 'line symbol)
+			'i
+		)
+	)
+)
 
 ;;------------------------
 
 (defun printevenrow (rowtoprint linerepmap)
-
-
+	(mapcar #'convertsymboleven (elt linerepmap (- rowtoprint 1))
+	)
 )
 
 ;;------------------------
 
-(defun printoddrow  (rowtoprint linerepmap mapcontents)
+;;NOT FINISHED MEGHAN
+	;;prints out odd rows, besides the first and last (probably)
+	;;need to splice together the mapcontent rows with these rows...
+(defun printoddrow (rowtoprint linerepmap mapcontents)
+	(mapcar #'convertsymbolodd (elt linerepmap (- rowtoprint 1))
+	)
+)
+
+;;------------------------
