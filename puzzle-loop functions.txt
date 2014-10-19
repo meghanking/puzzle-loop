@@ -11,7 +11,9 @@
 	(setq rownum (list-length (eval mapname)))
 	(setq colnum (list-length (car (eval mapname))))
 	(setq linerepmap (makelinerepmap rownum colnum))
-	(setq currentmap (list mapname linerepmap rownum colnum))
+	(setq linenum 0)
+	(setq movelist '())
+	(setq currentmap (list mapname 'linerepmap rownum colnum 'movelist 'linenum))
 )
 
 
@@ -20,9 +22,9 @@
 
 (defun makelinerepmap (rownum colnum)
 
-	(loop for i from 1 to (+ (* rownum 2) 1) collect
+	(loop for i from 1 to (+ (* rownum 2) 3) collect
 		(cond 
-			((or (equal 1 i) (equal (+ (* rownum 2) 1) i))
+			((or (equal 1 i) (equal (+ (* rownum 2) 3) i))
 				(make-sequence 'list (+ 1 colnum) :initial-element 'xx
 	)
 			)
@@ -44,13 +46,75 @@
 ;;------------------------
 ;;unimplemented
 (defun makemove (rownum colnum sidetoplaceline)
+	
+	(setq numberrow (convertcontenttolinerow rownum))
+	(setq numbercol colnum)
+	
+	(cond
+		((equal sidetoplaceline 'T)
+			(setq numberrow (- numberrow 1))
+		)
+		((equal sidetoplaceline 'B)
+			(setq numberrow (+ numberrow 1))
+		)		
+	)
+	
+	(cond
+		((equal sidetoplaceline 'R)
+			(setq  numbercol (+ numbercol 1))
+		)
+		((equal sidetoplaceline 'T)
+			(setq numbercol (+ numbercol 1))
+		)
+		((equal sidetoplaceline 'B)
+			(setq numbercol (+ numbercol 1))
+		)	
+	)
+	
+	
+	(setq linenum (+ 1 linenum))
+	(setq movelist (append movelist (list (list rownum colnum sidetoplaceline))))
+	
+	(setq linerepmap 
+		(loop for i from 1 to (list-length linerepmap) collect
+			(cond
+				((equal numberrow i)
+					(loop for j from 1 to (list-length (elt linerepmap (- i 1))) collect
+						(cond
+							((equal numbercol j)
+								'line
+							)
+							(t
+								(elt (elt linerepmap (- i 1)) (- j 1))
+							)
+						)
+					)
+				)
+				(t
+					(elt linerepmap (- i 1))
+				)
+					
+			)
+		)
+	)
+	
+	(printmap currentmap)
+)	
+
+;;------------------------
+(defun getdot ( ... )
+
+)
+
+;;------------------------
+(defun isvalidplacement ( ... )
 
 )
 
 ;;------------------------
 ;;unimplemented
 
-(defun isclosedcircut (lineplacement)
+(defun isclosedcircut ()
 "given a starting line, tests to see if this line is contained in a closed loop"
 
 ;;save the original line you are looking at..
@@ -78,15 +142,43 @@
 # 	printoddrow
 # 		convertsymbolodd
 
+
+;;------------------------
+
 (defun printmap (currentmap)
 
-	(loop for i from 2 to (* (caddr currentmap)) collect
-		(cond
-			((equal 0 (mod i 2))
-				(printroweven i (cadr currentmap))
-			)
-			(t
-				(printrowodd i (cadr currentmap))
+	(setq resultresult (getprintmap currentmap))
+	
+	(loop for i from 0 to (- (list-length resultresult) 1 ) do
+		(print (elt resultresult i))
+	)
+	(string (statestring))
+)
+
+;;------------------------
+	;;unimplemented for now
+	;;will inform the user of
+		;;bad move
+		;;make another move
+		;;game is over
+
+(defun statestring ()
+	(string "This is the current map state")
+
+)
+;;------------------------
+
+(defun getprintmap (currentmap)
+
+	(setq resultresult
+		(loop for i from 2 to (- (list-length (eval (cadr currentmap))) 1) collect
+			(cond
+				((equal 0 (mod i 2))
+					(printevenrow i (cadr currentmap))
+				)
+				(t
+					(printoddrow i (cadr currentmap) (car currentmap))
+				)
 			)
 		)
 	)
@@ -94,20 +186,13 @@
 
 ;;------------------------
 
-(defun convertsymboleven (symboltoconvert)
+(defun convertsymboleven (symbol)
 
-	(cond 
-		((equal 'xx symboltoconvert) 
-			'x
-		)
-		((equal 'x symboltoconvert )
-			'x
-		)
-		((equal 'empty symboltoconvert )
-			'*
-		)
-		((equal 'line symboltoconvert )
-			'-
+	(cond
+		((equal 'line symbol)
+			'=
+		)(t 
+			(convertsymbolany symbol)
 		)
 	)
 )
@@ -116,6 +201,20 @@
 
 (defun convertsymbolodd (symbol)
 
+	(cond 
+		((equal 'line symbol)
+			'i
+		)
+		(t 
+			(convertsymbolany symbol)
+		)
+	)
+)
+
+;;------------------------
+
+(defun convertsymbolany (symbol)
+	
 	(cond 
 		((equal 'xx symbol) 
 			'x
@@ -126,27 +225,67 @@
 		((equal 'empty symbol)
 			'*
 		)
-		((equal 'line symbol)
-			'i
-		)
 	)
 )
 
 ;;------------------------
 
 (defun printevenrow (rowtoprint linerepmap)
-	(mapcar #'convertsymboleven (elt linerepmap (- rowtoprint 1))
+	(setq lines (mapcar #'convertsymboleven (elt (eval linerepmap) (- rowtoprint 1))
+	))
+	 
+	(setq result '())
+	
+	(loop for i from 1 to (- (list-length lines) 2) do
+		(setq result 
+			(append result 
+				(list 
+					'+
+					(elt lines i)
+				)
+			)
+		)
 	)
+	
+	(append result (list '+))
+)
+
+;;------------------------
+	
+(defun printoddrow (rowtoprint linerepmap mapname)
+	(setq symbols 
+		(mapcar #'convertsymbolodd 
+			(elt (eval linerepmap) (- rowtoprint 1)
+			)
+		)
+	)
+	
+	(setq mapcontentsrow (elt (eval mapname) (- (convertlinetocontentrow rowtoprint) 1 )))
+	
+	(setq result '())
+	
+	(loop for i from 1 to (list-length mapcontentsrow) do
+		(setq result 
+			(append result 
+				(list 
+					(elt symbols (- i 1))
+					(elt mapcontentsrow (- i 1))
+				)
+			)
+		)
+	)
+	
+	(append result (last symbols 1))
 )
 
 ;;------------------------
 
-;;NOT FINISHED MEGHAN
-	;;prints out odd rows, besides the first and last (probably)
-	;;need to splice together the mapcontent rows with these rows...
-(defun printoddrow (rowtoprint linerepmap mapcontents)
-	(mapcar #'convertsymbolodd (elt linerepmap (- rowtoprint 1))
-	)
+(defun convertlinetocontentrow (number)
+	(/ (- number 1) 2 )
 )
 
 ;;------------------------
+
+(defun convertcontenttolinerow (number)
+	(+ (* number 2) 1 )
+)

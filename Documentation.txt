@@ -46,7 +46,7 @@ makerepresentation -> creates reps for currentmap. sets currentmap with mapname 
 
 
 ;; scratch making dot rep... make linerep and derive dots each time you do it I think will be better. 
-;; number of linerows is linerownum
-;; number of columns in even number rows is linecoleven 
-;; number of columns in odd number rows is linecolodd
+;; number of linerows is linerownum (+ (* rownum 2) 1)
+;; number of columns in even number rows is linecoleven (+ 2 colnum)
+;; number of columns in odd number rows is linecolodd (+ 1 colnum)
 ;; DO NOT ADD IN THE DESCRPIPTION BECAUSE IT ERRORED OUT and it was annoying...
