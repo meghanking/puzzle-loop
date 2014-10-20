@@ -25,18 +25,18 @@
 	(loop for i from 1 to (+ (* rownum 2) 3) collect
 		(cond 
 			((or (equal 1 i) (equal (+ (* rownum 2) 3) i))
-				(make-sequence 'list (+ 1 colnum) :initial-element 'xx
+				(make-sequence 'list (+ 1 colnum) :initial-element '(xx)
 	)
 			)
 			((equal (mod i 2) 0)
 				(append 
-					(list 'xx) 
-					(make-sequence 'list colnum :initial-element 'empty) 
-					(list 'xx)
+					(list '(xx)) 
+					(make-sequence 'list colnum :initial-element '(empty)) 
+					(list '(xx))
 				)
 			)
 			(t 
-				(make-sequence 'list (+ colnum 1) :initial-element 'empty
+				(make-sequence 'list (+ colnum 1) :initial-element '(empty)
 				)
 			)
 		)
@@ -72,6 +72,7 @@
 	)
 	
 	
+	
 	(setq linenum (+ 1 linenum))
 	(setq movelist (append movelist (list (list rownum colnum sidetoplaceline))))
 	
@@ -82,7 +83,7 @@
 					(loop for j from 1 to (list-length (elt linerepmap (- i 1))) collect
 						(cond
 							((equal numbercol j)
-								'line
+								'(line)
 							)
 							(t
 								(elt (elt linerepmap (- i 1)) (- j 1))
@@ -102,19 +103,52 @@
 )	
 
 ;;------------------------
-(defun getdot ( ... )
+	;;numberol and numberrow is the lines placement in the linerepmap
+	
+(defun getdotsforline ( numbercol numberrow )
 
+
+	(cond
+		((equal (mod i 2) 0)
+			(list
+				(getDot (- numberrow 1) (- numbercol 1))
+				(getDot (- numberrow 1) numbercol)
+			)
+		)
+		(t
+			(list
+				(getDot numberrow numbercol)
+				(getDot (- numberrow 2) numbercol)
+			)
+		)
+	)
+)
+
+;; list of
+;; 	yourself
+;; 	right
+;; 	bottom
+;; 	left
+
+;;------------------------
+(defun getDot (numberrow numbercol)	
+	(list 
+		(elt (elt linerepmap (- numberrow 1)) (- numbercol 1))
+		(elt (elt linerepmap numberrow) numbercol)
+		(elt (elt linerepmap (+ numberrow 1)) (- numbercol 1))
+		(elt (elt linerepmap numberrow) (- numbercol 1))
+	)
 )
 
 ;;------------------------
-(defun isvalidplacement ( ... )
+;;(defun isvalidplacement ( ... )
 
-)
+;;)
 
 ;;------------------------
 ;;unimplemented
 
-(defun isclosedcircut ()
+;;(defun isclosedcircut ()
 "given a starting line, tests to see if this line is contained in a closed loop"
 
 ;;save the original line you are looking at..
@@ -133,14 +167,14 @@
 ;;if it is the original, check if the count you have is the same as the overall line count
 ;;means you have hit all the lines and it is a closed loop
 
-)
+;;)
 
 ;;------------------------
-# utilizes
-# 	printevenrow
-# 		convertsymboleven
-# 	printoddrow
-# 		convertsymbolodd
+;; utilizes
+;; 	printevenrow
+;; 		convertsymboleven
+;; 	printoddrow
+;; 		convertsymbolodd
 
 
 ;;------------------------
@@ -189,7 +223,7 @@
 (defun convertsymboleven (symbol)
 
 	(cond
-		((equal 'line symbol)
+		((equal '(line) symbol)
 			'=
 		)(t 
 			(convertsymbolany symbol)
@@ -202,7 +236,7 @@
 (defun convertsymbolodd (symbol)
 
 	(cond 
-		((equal 'line symbol)
+		((equal '(line) symbol)
 			'i
 		)
 		(t 
@@ -216,13 +250,13 @@
 (defun convertsymbolany (symbol)
 	
 	(cond 
-		((equal 'xx symbol) 
+		((equal '(xx) symbol) 
 			'x
 		)
-		((equal 'x symbol) 
+		((equal '(x) symbol) 
 			'*
 		)
-		((equal 'empty symbol)
+		((equal '(empty) symbol)
 			'*
 		)
 	)
