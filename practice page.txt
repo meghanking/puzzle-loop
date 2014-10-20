@@ -1,22 +1,10 @@
-;;These are sample maps to use for testing
-
-((3) (3))
-
-((2 2 NIL NIL NIL) (NIL 2 NIL 2 2) (NIL NIL 3 NIL NIL) (NIL NIL 0 NIL NIL) (3 NIL 3 NIL NIL))
- 
- ((3 0 3))
- 
- ((4))
- 
- ((2 2) (2 2))
- 
- ((1 0) (3 NIL) (2 NIL))
- 
- 
+;;These are sample maps to use for testing 
 (setq maplist '())
 
 (makemap 'map1  '((2 2) (2 2)))
-(makemap 'map2 '((1 0) (3 NIL) (2 NIL)))
-(makemap 'map3 '((2 2 NIL NIL NIL) (NIL 2 NIL 2 2) (NIL NIL 3 NIL NIL) (NIL NIL 0 NIL NIL) (3 NIL 3 NIL NIL)))
+(makemap 'map2 '((1 0) (3 @) (2 @)))
+(makemap 'map3 '((2 2 @ @ @) (@ 2 @ 2 2) (@ @ 3 @ @) (@ @ 0 @ @) (3 @ 3 @ @)) )
+(makemap 'map4 '((4)))
+(makemap 'map5 '((3) (3)))
 
-(makerepresentation 'map1)
+(makerepresentations 'map1)
