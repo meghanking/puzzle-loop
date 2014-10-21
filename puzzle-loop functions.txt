@@ -11,9 +11,10 @@
 	(setq rownum (list-length (eval mapname)))
 	(setq colnum (list-length (car (eval mapname))))
 	(setq linerepmap (makelinerepmap rownum colnum))
+	(setq dotrepmap (makedotrepmap linerepmap))
 	(setq linenum 0)
 	(setq movelist '())
-	(setq currentmap (list mapname 'linerepmap rownum colnum 'movelist 'linenum))
+	(setq currentmap (list mapname 'linerepmap 'dotrepmap rownum colnum 'movelist 'linenum))
 )
 
 
@@ -31,71 +32,100 @@
 			((equal (mod i 2) 0)
 				(append 
 					(list '(xx)) 
-					(make-sequence 'list colnum :initial-element '(empty)) 
+					(loop for i from 1 to colnum collect
+					(list 'empty))
 					(list '(xx))
 				)
 			)
 			(t 
-				(make-sequence 'list (+ colnum 1) :initial-element '(empty)
+				(loop for i from 0 to colnum collect 
+					(list 'empty)
 				)
+				
 			)
 		)
 	)
 )
 
 ;;------------------------
-;;unimplemented
+
+(defun makedotrepmap (linerepmap)
+
+	(remove nil
+		(setq listofdots
+			(loop for i from 1 to (- (list-length linerepmap) 1) collect
+				(cond
+						((equal (equal (mod i 2) 0) NIL)	 	
+						
+						(loop for j from 1 to (+ 1 colnum) collect
+							(getDot i j))
+						)
+				)
+			)
+		)
+	)
+)
+		
+	
+	
+
+;;------------------------
+
+(defun adddotwithtoplinelocatedhere (rowrownum colcolnum)
+
+	(
+
+	(+ dotincrementor 1)
+
+)
+
+
+;;------------------------
 (defun makemove (rownum colnum sidetoplaceline)
 	
 	(setq numberrow (convertcontenttolinerow rownum))
 	(setq numbercol colnum)
 	
 	(cond
-		((equal sidetoplaceline 'T)
+		(
+			(equal sidetoplaceline 'T)
 			(setq numberrow (- numberrow 1))
 		)
-		((equal sidetoplaceline 'B)
+		(
+			(equal sidetoplaceline 'B)
 			(setq numberrow (+ numberrow 1))
 		)		
 	)
 	
 	(cond
-		((equal sidetoplaceline 'R)
+		(
+			(equal sidetoplaceline 'R)
 			(setq  numbercol (+ numbercol 1))
 		)
-		((equal sidetoplaceline 'T)
+		(
+			(equal sidetoplaceline 'T)
 			(setq numbercol (+ numbercol 1))
 		)
-		((equal sidetoplaceline 'B)
+		(
+			(equal sidetoplaceline 'B)
 			(setq numbercol (+ numbercol 1))
 		)	
 	)
 	
+	(setq lineinquestion (elt (elt linerepmap (- numberrow 1)) (- numbercol 1)))
 	
 	
-	(setq linenum (+ 1 linenum))
-	(setq movelist (append movelist (list (list rownum colnum sidetoplaceline))))
-	
-	(setq linerepmap 
-		(loop for i from 1 to (list-length linerepmap) collect
-			(cond
-				((equal numberrow i)
-					(loop for j from 1 to (list-length (elt linerepmap (- i 1))) collect
-						(cond
-							((equal numbercol j)
-								'(line)
-							)
-							(t
-								(elt (elt linerepmap (- i 1)) (- j 1))
-							)
-						)
-					)
-				)
-				(t
-					(elt linerepmap (- i 1))
-				)
-					
-			)
+	(cond
+		(
+			(equal dotinquestion '(empty))
+			(statestring "Valid move!") 
+			(rplaca lineinquestion 'line)
+			(setq linenum (+ 1 linenum))
+			(setq movelist (append movelist (list (list rownum colnum sidetoplaceline))))
+		)
+		(
+			(equal lineinquestion '(line))
+			(statestring "Already has a line")
 		)
 	)
 	
@@ -105,24 +135,22 @@
 ;;------------------------
 	;;numberol and numberrow is the lines placement in the linerepmap
 	
-(defun getdotsforline ( numbercol numberrow )
-
-
-	(cond
-		((equal (mod i 2) 0)
-			(list
-				(getDot (- numberrow 1) (- numbercol 1))
-				(getDot (- numberrow 1) numbercol)
-			)
-		)
-		(t
-			(list
-				(getDot numberrow numbercol)
-				(getDot (- numberrow 2) numbercol)
-			)
-		)
-	)
-)
+;; (defun getdotsforline ( numbercol numberrow )
+;; 	(cond
+;; 		((equal (mod i 2) 0)
+;; 			(list
+;; 				(getDot (- numberrow 1) (- numbercol 1))
+;; 				(getDot (- numberrow 1) numbercol)
+;; 			)
+;; 		)
+;; 		(t
+;; 			(list
+;; 				(getDot numberrow numbercol)
+;; 				(getDot (- numberrow 2) numbercol)
+;; 			)
+;; 		)
+;; 	)
+;; )
 
 ;; list of
 ;; 	yourself
@@ -131,14 +159,18 @@
 ;; 	left
 
 ;;------------------------
-(defun getDot (numberrow numbercol)	
+(defun getDot (numberrow numbercol)		
 	(list 
 		(elt (elt linerepmap (- numberrow 1)) (- numbercol 1))
+	
 		(elt (elt linerepmap numberrow) numbercol)
+	
 		(elt (elt linerepmap (+ numberrow 1)) (- numbercol 1))
+	
 		(elt (elt linerepmap numberrow) (- numbercol 1))
 	)
 )
+
 
 ;;------------------------
 ;;(defun isvalidplacement ( ... )
@@ -186,7 +218,7 @@
 	(loop for i from 0 to (- (list-length resultresult) 1 ) do
 		(print (elt resultresult i))
 	)
-	(string (statestring))
+	(string statestring)
 )
 
 ;;------------------------
@@ -196,9 +228,8 @@
 		;;make another move
 		;;game is over
 
-(defun statestring ()
-	(string "This is the current map state")
-
+(defun statestring (stringtostate)
+	(setq statestring stringtostate)
 )
 ;;------------------------
 
