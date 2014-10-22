@@ -1,0 +1,18 @@
+(defun playgameagain ()
+  (if (y-or-n-p "You've won! Do you want to play another board?") 
+      (progn (format t "Choose a map:~%~{~a, ~}" maplist)
+             (makerepresentations (read)))
+	)
+)
+
+(defun aftermoveprompt ()
+	(cond
+		( isboardvalid
+			(playgameagain)
+		)
+		(	(y-or-n-p "Make another move?")
+			(progn (format t "Your next move it: ")
+             (makemove (read) (read) (read)))
+		)
+	)
+)
