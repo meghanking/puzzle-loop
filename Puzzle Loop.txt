@@ -1,0 +1,824 @@
+(defun slither ()
+	
+	(loop
+		(printmap)
+		(dotstring)
+		(tilestring)
+		(statestring) 
+		
+		(progn 
+			(format t "Make another move? y/n: ")
+			(Setq answer (read))
+		)
+		
+		(when 
+			(cond
+				(
+					(equal answer 'y)
+					(progn 
+						(format t "Your next move it: ")
+						(makemove (read) (read) (read))
+					)
+				)
+				(t
+					(return "Thanks for playing!")
+				)
+			)
+		)
+
+		(when isboardvalid 
+        	(if (playgameagain)
+        		(slither)
+        		(return "Thanks for playing!")
+        	)
+        	(return nil)
+        )
+    )
+)
+
+
+
+;;------------------------
+
+(defun playgameagain ()
+  (if (y-or-n-p "You've won! Do you want to play another board?") 
+      (progn (format t "Choose a map:~%~{~a, ~}" maplist)
+             (makegameboard (read)) t)
+             nil
+	)
+)
+
+
+
+;;------------------------
+
+(defun makemove (rownum colnum sidetoplaceline)
+	
+	(setq lineinquestion (getplacementreference rownum colnum sidetoplaceline))
+	
+	(cond
+		( 
+			(equal lineinquestion '(empty))
+			(setq linenum (+ 1 linenum))
+			(setq movelist (append movelist (list (list rownum colnum sidetoplaceline))))
+			(rplaca lineinquestion 'line)
+		)
+		(
+			t
+			(print "Not a valid placement")
+		)
+	)
+	
+	(checkallvalidity)
+)	
+
+;;------------------------
+
+(defun checkallvalidity ()
+
+	(list (checkdots dotrepmap) (checktiles tilerepmap))
+)
+
+;;------------------------
+
+(defun checkdots (dotrepmap)
+
+	(resetaredotsvalid)	
+			
+	(loop for i from 1 to (list-length dotrepmap) collect
+		(mapcar #'checkdot (elt dotrepmap (- i 1)))
+
+	)
+			
+	aredotsvalid
+)
+
+
+;;------------------------
+
+(defun checktiles (tilerepmap)
+
+	(resetaretilesvalid)
+
+	(loop for i from 1 to (list-length tilerepmap) collect
+		(mapcar #'checktile (elt tilerepmap (- i 1)))
+
+	)
+
+	aretilesvalid
+)
+
+
+;;------------------------
+
+;;(defun isvalidplacement ( )
+
+;;)
+
+(defun resetaredotsvalid ()
+
+(setq aredotsvalid t)
+
+)
+
+(defun aredotsvalid ( isitthough)
+
+(setq aredotsvalid (and isitthough aredotsvalid))
+
+)
+
+(defun resetaretilesvalid ()
+
+(setq aretilesvalid t)
+
+)
+
+(defun aretilesvalid ( isitthough)
+
+(setq aretilesvalid (and isitthough aretilesvalid))
+
+)
+
+
+;;------------------------
+
+(defun checkdot ( dottocheck )
+
+	(setq countoflines (count '(line) dottocheck :test #'equal))
+	(setq countofxs ( + (count '(xx) dottocheck :test #'equal) (count '(x) dottocheck :test #'equal)))
+	(setq countofemptys (count '(empty) dottocheck :test #'equal))
+
+	(cond
+		(
+			(equal countoflines 4) 
+			;;BAD
+			(aredotsvalid nil)
+		)
+		(
+			(equal countoflines 3) 
+			;;BAD
+			(aredotsvalid nil)
+		)
+		(
+			(equal countoflines 2)
+			;;OKAY
+			;;if some empty spots
+			;;set all the other lines to x's
+			(aredotsvalid t)
+		)
+		(
+			(equal countoflines 1)
+			 ;;BAD
+			 (aredotsvalid nil)
+		)
+		(
+			t
+			;;OKAY
+			;;if has any x's, set all the lines to x's
+			(aredotsvalid t)
+		)
+	)	
+)
+
+(defun checktile ( tiletocheck )
+
+	(if (equal (car tiletocheck) '@)
+		(setq numberintile nil)
+		(setq numberintile (car tiletocheck))
+	)
+	
+	
+	(setq countoflines (count '(line) tiletocheck :test #'equal))
+	(setq countofxs ( + (count '(xx) tiletocheck :test #'equal) (count '(x) tiletocheck :test #'equal)))
+	(setq countofemptys (count '(empty) tiletocheck :test #'equal))
+
+	(cond
+		( (equal numberintile nil)
+			(aretilesvalid nil)
+		)
+		(
+			(equal countoflines numberintile) 
+			;;GOOD
+			;;is some empty spots
+			;;set all the other lines to x's
+			(aretilesvalid t)
+		)
+		(
+			(< countoflines numberintile) 
+			;;can be good or bad or ugly
+			
+			(cond
+				((equal countofemptys (- numberintile countoflines))
+					;;GOOD
+					;;is some empty spots
+					;;set all the other lines to x's
+					(aretilesvalid nil)
+				)
+				((> countofemptys 0)
+					;;fine
+					(aretilesvalid nil)
+				)
+				(t
+					;;if all others are x's
+					;;BAD
+					;;which could happen because corners or something
+					;;bad juju
+					(aretilesvalid nil)
+				)
+			)
+		)
+		(
+			t
+			;;BAD
+			;;CANNOT HELP
+			;;BAD BAD BAD
+			(aretilesvalid nil)
+		)
+	)	
+)
+
+;;------------------------
+
+(defun getplacementreference( rownum colnum sidetoplaceline ) 
+
+		(setq rownum (convertcontenttolinerow rownum))
+		
+	
+		(cond
+			(
+				(equal sidetoplaceline 'T)
+				(setq rownum (- rownum 1))
+			)
+			(
+				(equal sidetoplaceline 'B)
+				(setq rownum (+ rownum 1))
+			)		
+		)
+	
+		(cond
+			(
+				(equal sidetoplaceline 'R)
+				(setq  colnum (+ colnum 1))
+			)
+			(
+				(equal sidetoplaceline 'T)
+				(setq colnum (+ colnum 1))
+			)
+			(
+				(equal sidetoplaceline 'B)
+				(setq colnum (+ colnum 1))
+			)	
+		)
+	
+		(elt (elt linerepmap (- rownum 1)) (- colnum 1))
+
+)
+
+;;------------------------
+;; (defun isplacingonempty( placementtocheck )
+;; 
+;; 	(cond
+;; 		(
+;; 			(equal placementtocheck '(empty))
+;; 			(linestring "Valid move!") 
+;; 			(rplaca placementtocheck 'line)
+;; 		)
+;; 	)
+;; 
+;; )
+
+;;------------------------
+;;unimplemented
+
+;;(defun isclosedcircut ()
+
+
+;;check the tiles before you check this! precondition to calling this... yes
+;; (cond
+;; 	((equal linenum 0)
+;; 		t
+;; 		(
+;; 	)
+;; 	((equal linenum 1)
+;; 		nil
+;; 	)
+;; 	(t
+		;;find a line
+		;;have a cool algorithm that checks if all the lines are connected
+		;;do that shit on lock
+		
+	
+		
+
+;;"given a starting line, tests to see if this line is contained in a closed loop"
+
+;;save the original line you are looking at..
+;;note: need to keep a line to pass in, maybe last line drawn... ill figure that out later
+
+;;go to the next line in some direction, doesn't matter. keep a count of how many lines you have seen
+;;note: if there is not a way to go in both directions, then its not a closed loop
+
+;;if there is no line, not a closed circuit. return false?
+
+;;if there is more than one, DONT LET THAT HAPPEN
+;;besides the first time when you need to choose which direction to go in.. (if that doesn’t have two directions than end right there and then…
+
+;;if there is, check if it is the original (points to the same place in memory), if its not, call this on the next line
+
+;;if it is the original, check if the count you have is the same as the overall line count
+;;means you have hit all the lines and it is a closed loop
+
+;;)
+
+
+
+;;------------------------
+	;;unimplemented for now
+	;;will inform the user of
+		;;bad move
+		;;make another move
+		;;game is over
+
+(defun statestring ()
+	(cond
+		( isboardvalid 
+			(print "Game is over and the board is correct.")
+			maplist
+		)
+		( t
+			(print "Board is still incorrect or not completed.")
+		)
+	)
+)
+
+;; (defun linestring (stringtoline)
+;; 	(if aredotsvalid 
+;; 		(string "Intersections are valid")
+;; 		(string "Intersections are not valid")
+;; 	)
+;; )
+
+(defun dotstring ()
+	(if aredotsvalid 
+		(print "Intersections are valid")
+		(print "Some intersections are not valid")
+	)
+)
+
+(defun tilestring ()
+	(if aretilesvalid 
+		(print "Tiles are valid")
+		(print "Some tiles are not valid")
+	)
+)
+
+
+;;------------------------
+
+(defun convertlinetocontentrow (number)
+	(/ (- number 1) 2 )
+)
+
+;;------------------------
+
+(defun convertcontenttolinerow (number)
+	(+ (* number 2) 1 )
+)
+
+(defun makemap (mapname mapcontents)
+
+	 (set mapname mapcontents)
+	 (setq maplist (append maplist (list mapname)))
+ )
+
+;;------------------------
+
+(defun makegameboard (mapname) 
+
+	(setq rownum (list-length (eval mapname)) )
+	(setq colnum (list-length (car (eval mapname))))
+	(setq linerepmap (makelinerepmap rownum colnum))
+	(setq dotrepmap (makedotrepmap linerepmap))
+	(setq tilerepmap (maketilerepmap dotrepmap (eval mapname)))
+	(setq linenum 0)
+	(setq aredotsvalid nil)
+	(setq aretilesvalid nil)
+	(setq isboardvalid nil)
+	(setq movelist '())
+	(setq statestring "Let the game begin")
+	;;(setq linestring "Let the game begin")
+	(setq currentmap (list mapname 'linerepmap 'dotrepmap 'tilerepmap 'movelist 'linenum))
+	(checkallvalidity)
+	(string "The game map is now set. Enter (slither) to start the game.")
+)
+
+
+
+;;------------------------
+
+(defun makelinerepmap (rownum colnum)
+
+	(loop for i from 1 to (+ (* rownum 2) 3) collect
+		(cond 
+			((or (equal 1 i) (equal (+ (* rownum 2) 3) i))
+				(make-sequence 'list (+ 1 colnum) :initial-element '(xx)
+	)
+			)
+			((equal (mod i 2) 0)
+				(append 
+					(list '(xx)) 
+					(loop for i from 1 to colnum collect
+					(list 'empty))
+					(list '(xx))
+				)
+			)
+			(t 
+				(loop for i from 0 to colnum collect 
+					(list 'empty)
+				)
+			)
+		)
+	)
+)
+
+;;------------------------
+
+(defun createdot (numberrow numbercol)		
+	(list 
+		(elt (elt linerepmap (- numberrow 1)) (- numbercol 1))
+	
+		(elt (elt linerepmap numberrow) numbercol)
+	
+		(elt (elt linerepmap (+ numberrow 1)) (- numbercol 1))
+	
+		(elt (elt linerepmap numberrow) (- numbercol 1))
+	)
+)
+
+;;------------------------
+
+(defun makedotrepmap (linerepmap)
+
+	(remove nil
+		(setq listofdots
+			(loop for i from 1 to (- (list-length linerepmap) 1) collect
+				(cond
+						((equal (equal (mod i 2) 0) NIL)	 	
+						
+						(loop for j from 1 to (+ 1 colnum) collect
+							(createdot i j))
+						)
+				)
+			)
+		)
+	)
+)
+
+
+
+;;------------------------
+
+(defun maketilerepmap (dotrepmap mapcontents)
+ 
+	(loop for i from 1 to (list-length mapcontents) collect
+		(loop for j from 1 to (list-length (car mapcontents)) collect
+			(list (elt (elt mapcontents (- i 1)) (- j 1))
+
+			(elt (elt (elt dotrepmap (- i 1)) (- j 1)) 1)
+
+			(elt (elt (elt dotrepmap i) j) 0)
+		
+			(elt (elt (elt dotrepmap i) j) 3)
+		
+			(elt (elt (elt dotrepmap (- i 1)) (- j 1)) 2)
+			
+			)
+		)	
+	)
+ )
+
+
+;;------------------------
+
+(defun getprintmap (currentmap)
+
+	(setq resultresult
+		(loop for i from 2 to (- (list-length (eval (cadr currentmap))) 1) collect
+			(cond
+				((equal 0 (mod i 2))
+					(printevenrow i (cadr currentmap))
+				)
+				(t
+					(printoddrow i (cadr currentmap) (car currentmap))
+				)
+			)
+		)
+	)
+)
+
+;;------------------------
+
+(defun convertsymboleven (symbol)
+
+	(cond
+		((equal '(line) symbol)
+			'=
+		)(t 
+			(convertsymbolany symbol)
+		)
+	)
+)
+
+;;------------------------
+
+(defun convertsymbolodd (symbol)
+
+	(cond 
+		((equal '(line) symbol)
+			'i
+		)
+		(t 
+			(convertsymbolany symbol)
+		)
+	)
+)
+
+;;------------------------
+
+(defun convertsymbolany (symbol)
+	
+	(cond 
+		((equal '(xx) symbol) 
+			'x
+		)
+		((equal '(x) symbol) 
+			'*
+		)
+		((equal '(empty) symbol)
+			'*
+		)
+	)
+)
+
+;;------------------------
+
+(defun printevenrow (rowtoprint linerepmap)
+	(setq lines (mapcar #'convertsymboleven (elt (eval linerepmap) (- rowtoprint 1))
+	))
+	 
+	(setq result '())
+	
+	(loop for i from 1 to (- (list-length lines) 2) do
+		(setq result 
+			(append result 
+				(list 
+					'+
+					(elt lines i)
+				)
+			)
+		)
+	)
+	
+	(append result (list '+))
+)
+
+;;------------------------
+	
+(defun printoddrow (rowtoprint linerepmap mapname)
+	(setq symbols 
+		(mapcar #'convertsymbolodd 
+			(elt (eval linerepmap) (- rowtoprint 1)
+			)
+		)
+	)
+	
+	(setq mapcontentsrow (elt (eval mapname) (- (convertlinetocontentrow rowtoprint) 1 )))
+	
+	(setq result '())
+	
+	(loop for i from 1 to (list-length mapcontentsrow) do
+		(setq result 
+			(append result 
+				(list 
+					(elt symbols (- i 1))
+					(elt mapcontentsrow (- i 1))
+				)
+			)
+		)
+	)
+	
+	(append result (last symbols 1))
+)
+
+
+;;------------------------
+
+(defun printmap ()
+
+	(setq resultresult (getprintmap currentmap))
+	
+	(loop for i from 0 to (- (list-length resultresult) 1 ) do
+		(print (elt resultresult i))
+	)
+)
+
+
+;;------------------------
+(defun showgamerules ()
+	(princ
+"Slither Link's Puzzle Loop is a game of wits, between you and the rules I will describe 
+here.
+
+The quote below is from Slither Link's exact description copied from their website:
+
+\"The rules are simple. You have to draw lines between the dots to form a single loop 
+without crossings or branches. The numbers indicate how many lines surround it.\"
+
+
+To accomplish this monumental task, the following wil explain how, coding wise, things 
+needed to accomplish such game play by my implementation such as which function calls to 
+make, how to construct a map, and specifying moves on the board.
+
+
+If any questions, comments, or concerns, feel free to contact me:
+	Meghan King
+	meghantking67@gmail.com
+
+using the subject: Slither's Puzzle Loop Question.
+
+
+
+Content sections are in this order:
+	Seeing the game rules
+	Making a map
+	Selecting a map to play
+	Printing a map before gameplay
+	Starting a game
+	Making a move
+	Winning the game
+
+==========================================================================================
+Seeing the game rules:
+
+	Game rules can be found in the README.txt file paired with the Silther implementation.
+	
+	Game rules can also be printed once the game is loaded by calling the function
+	'showgamerules' which has no arguments
+	
+		CG-USER(27): (showgamerules)
+
+		The output of this is omitted in this case.
+
+==========================================================================================
+Making a map:
+
+	Maps are structured as a a list. Each sublist is the rows, in order from top to
+	bottom, with their contents being each element (or tile) in the corresponding column 
+	of that row. Tiles that have a number should be specified with that number 
+	(0, 1, 2, 3, or 4). Tiles that have no number should be specified with the @ char.
+
+	Once a map is made, the name of the map is added to a list of all the maps created, 
+	called 'maplist'. The 'maplist' is returned each time a new map is created.
+	To create a map, use the function 'makemap' which takes two arguments:
+		1. the name of map
+		2. the contents of the map in the correct form
+		
+	Please only input maps that have a proper solution.
+
+
+
+	Example of making a map:
+
+		(+ * + * +) 
+		(* 1 * 0 *) 
+		(+ * + * +) 
+		(* 3 * @ *) 
+		(+ * + * +) 
+		(* 2 * @ *) 
+		(+ * + * +) 
+
+		The map above can be created by entering:
+
+		CG-USER(17): (makemap 'mapexample '((1 0) (3 @) (2 @)))
+		(MAP1 MAP2 MAP3 MAP4 MAP5 MAP6 MAPEXAMPLE)
+		
+
+==========================================================================================
+Selecting a map to play:
+
+	Many maps can be made, but only one map can be the game board at a time. 
+	To select a game board, use the function 'makegameboard' with one arguement:
+		1. the name of the map
+		
+			CG-USER(27): (makegameboard 'mapexample)
+			
+			(+ * + * +) 
+			(* 1 * 0 *) 
+			(+ * + * +) 
+			(* 3 * @ *) 
+			(+ * + * +) 
+			(* 2 * @ *) 
+			(+ * + * +) 
+			\"This is now the game map. Enter (slither) to start the game.\"
+	
+	
+==========================================================================================
+Printing a map before gameplay:
+
+	A map can be printed with either the contents that were input by the user, or in 
+	the format seen in \"Example of making a map\".
+	
+	To print with the contents input by ther user, enter the name of the map.
+	
+			CG-USER(17): mapexample
+			((1 0) (3 @) (2 @))
+
+	To print with the contents in the playable format, use a function 'printmap' which 
+	takes no arguments. 
+	However, there MUST be a game board already set using 
+	'makegameboard' function.
+
+			CG-USER(37): (printmap)
+
+			(+ * + * +) 
+			(* 1 * 0 *) 
+			(+ * + * +) 
+			(* 3 * @ *) 
+			(+ * + * +) 
+			(* 2 * @ *) 
+			(+ * + * +)
+
+
+==========================================================================================
+Starting a game:
+
+	After selecting a map to play (see the section of the same name above for details),
+	use the function 'slither' with no arguments. 
+	However, there MUST be a game board already set using 'makegameboard' function.
+
+			CG-USER(38): (slither)
+
+			(+ * + * +) 
+			(* 1 * 0 *) 
+			(+ * + * +) 
+			(* 3 * @ *) 
+			(+ * + * +) 
+			(* 2 * @ *) 
+			(+ * + * +) 
+			\"Intersections are valid\" 
+			\"Some tiles are not valid\" 
+			\"Board is still incorrect or not completed.\" Make another move? y/n: 
+			
+			
+==========================================================================================	
+Making a move:
+
+	After starting a game, you will be prompted if you would liek to make another move.
+	Entering the character y will allow you to enter a move.
+	Entering anything else will allow you to exit the game.
+	
+			\"Board is still incorrect or not completed.\" Make another move? y/n: y
+			Your next move it: 
+	
+	To enter a move, specify the row number, column number, and the side you would like 
+	the lined to be placed (T top, L left, B bottom, R right)
+	
+			Your next move it: 2 2 L
+			
+			(+ * + * +) 
+			(* 1 * 0 *) 
+			(+ * + * +) 
+			(* 3 I @ *) 
+			(+ * + * +) 
+			(* 2 * @ *) 
+			(+ * + * +) 
+			\"Some intersections are not valid\" 
+			\"Some tiles are not valid\" 
+			\"Board is still incorrect or not completed.\" Make another move? y/n
+	
+	This will draw a line in the place that you have specified: 
+		the second row, second column, Left side
+		
+	This same move could have been accomplished with 2 1 R.
+
+
+==========================================================================================
+Winning a game:
+
+	A game is won by completing the board following the Slither's Puzzle Loop rules.
+	The game should correctly determine if you have completed the board successfully.
+	A dialog box will ask you if you want to play another board. 
+	, you will be prompted to ask the play another map.
+	A list of all the map names will be printed, and you can enter which map you would 
+	like to select.
+	
+			
+			You've won! Do you want to play another board?
+			Choose a map: map1 map2 map3 map4 map5 map6 mapexample
+			
+	Type in the map name, and the process starts all over again.
+	
+	
+================================== Thanks for playing! ==================================
+		")
+)
