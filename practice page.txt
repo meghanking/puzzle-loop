@@ -5,6 +5,6 @@
 (makemap 'map2 '((1 0) (3 @) (2 @)))
 (makemap 'map3 '((2 2 @ @ @) (@ 2 @ 2 2) (@ @ 3 @ @) (@ @ 0 @ @) (3 @ 3 @ @)) )
 (makemap 'map4 '((4)))
-(makemap 'map5 '((3) (3)))
+(makemap 'map5 '((@ @) (3 3)))
 
-(makerepresentations 'map1)
+(makerepresentations 'map3)
