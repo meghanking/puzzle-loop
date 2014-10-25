@@ -19,6 +19,7 @@
 						(format t "Your next move it: ")
 						(makemove (read) (read) (read))
 					)
+					(checkallvalidity)
 				)
 				(t
 					(return "Thanks for playing!")
@@ -36,8 +37,6 @@
     )
 )
 
-
-
 ;;------------------------
 
 (defun playgameagain ()
@@ -49,34 +48,94 @@
 )
 
 
+;;------------------------
+
+(defun isinvalidrownumber (row)
+
+	(and (> row 0) (<= row (list-length (eval (car currentmap)))))
+)
+
+
+;;------------------------
+
+(defun isinvalidcolnumber (col)
+
+	(and (> col 0) (<= col (list-length (car (eval (car currentmap))))))
+)
+
+
+;;------------------------
+
+(defun isinvalidsideletter (side)
+
+	(cond
+		(
+			(equal side 't)
+			t
+		)
+		(
+			(equal side 'b)
+			t
+		)
+		(
+			(equal side 'r)
+			t
+		)
+		(
+			(equal side 'l)
+			t
+		)
+		(
+			t
+			nil
+		)
+	)
+)
 
 ;;------------------------
 
 (defun makemove (rownum colnum sidetoplaceline)
 	
-	(setq lineinquestion (getplacementreference rownum colnum sidetoplaceline))
-	
-	(cond
-		( 
-			(equal lineinquestion '(empty))
-			(setq linenum (+ 1 linenum))
-			(setq movelist (append movelist (list (list rownum colnum sidetoplaceline))))
-			(rplaca lineinquestion 'line)
-		)
-		(
-			t
-			(print "Not a valid placement")
+	(setq thingy 
+		(and 
+			(isinvalidsideletter sidetoplaceline) 
+			(isinvalidcolnumber colnum) 
+			(isinvalidrownumber rownum)
 		)
 	)
+
+	(if thingy
+		(setq lineinquestion (getplacementreference rownum colnum sidetoplaceline))
+	)
 	
+	(if thingy
+		(cond
+			( 
+				(equal lineinquestion '(empty))
+				(setq linenum (+ 1 linenum))
+				(setq movelist (append movelist (list (list rownum colnum sidetoplaceline))))
+				(rplaca lineinquestion 'line)
+			)
+			(
+				t
+				(print "Not a valid placement")
+			)
+		)
+		(print "Bad input")
+	)
 	(checkallvalidity)
-)	
+)
 
 ;;------------------------
 
 (defun checkallvalidity ()
 
-	(list (checkdots dotrepmap) (checktiles tilerepmap))
+	(setq validitychecks (list (checkdots dotrepmap) (checktiles tilerepmap)))
+	(if
+		(equal (member nil validitychecks) nil)
+		(isclosedcircut)
+	)	
+	isboardvalid
 )
 
 ;;------------------------
@@ -110,29 +169,26 @@
 
 
 ;;------------------------
-
-;;(defun isvalidplacement ( )
-
-;;)
-
 (defun resetaredotsvalid ()
 
 (setq aredotsvalid t)
 
 )
 
+;;------------------------
 (defun aredotsvalid ( isitthough)
 
 (setq aredotsvalid (and isitthough aredotsvalid))
 
 )
 
+;;------------------------
 (defun resetaretilesvalid ()
 
 (setq aretilesvalid t)
 
 )
-
+;;------------------------
 (defun aretilesvalid ( isitthough)
 
 (setq aretilesvalid (and isitthough aretilesvalid))
@@ -180,6 +236,8 @@
 	)	
 )
 
+;;------------------------
+
 (defun checktile ( tiletocheck )
 
 	(if (equal (car tiletocheck) '@)
@@ -194,7 +252,7 @@
 
 	(cond
 		( (equal numberintile nil)
-			(aretilesvalid nil)
+			(aretilesvalid t)
 		)
 		(
 			(equal countoflines numberintile) 
@@ -235,6 +293,7 @@
 			(aretilesvalid nil)
 		)
 	)	
+	aretilesvalid
 )
 
 ;;------------------------
@@ -274,71 +333,253 @@
 
 )
 
-;;------------------------
-;; (defun isplacingonempty( placementtocheck )
-;; 
-;; 	(cond
-;; 		(
-;; 			(equal placementtocheck '(empty))
-;; 			(linestring "Valid move!") 
-;; 			(rplaca placementtocheck 'line)
-;; 		)
-;; 	)
-;; 
-;; )
 
 ;;------------------------
-;;unimplemented
 
-;;(defun isclosedcircut ()
+;;assuming that the dots and tiles are all valid before calling this
+(defun isclosedcircut ()
 
-
-;;check the tiles before you check this! precondition to calling this... yes
-;; (cond
-;; 	((equal linenum 0)
-;; 		t
-;; 		(
-;; 	)
-;; 	((equal linenum 1)
-;; 		nil
-;; 	)
-;; 	(t
-		;;find a line
-		;;have a cool algorithm that checks if all the lines are connected
-		;;do that shit on lock
-		
+	(cond
+		(
+			(< linenum 4)
+			(setq isboardvalid nil)
+		)
+		(t
+			(findfirstline)		;;firstline will now be set with some 
+			(Setq linecount 0)
+			(Setq nextline nil)
+			(setq currentline nil)
+			(findnextline)
+			(setq isboardvalid (equal linecount linenum))
+			
+		)
+	)	
 	
-		
-
-;;"given a starting line, tests to see if this line is contained in a closed loop"
-
-;;save the original line you are looking at..
-;;note: need to keep a line to pass in, maybe last line drawn... ill figure that out later
-
-;;go to the next line in some direction, doesn't matter. keep a count of how many lines you have seen
-;;note: if there is not a way to go in both directions, then its not a closed loop
-
-;;if there is no line, not a closed circuit. return false?
-
-;;if there is more than one, DONT LET THAT HAPPEN
-;;besides the first time when you need to choose which direction to go in.. (if that doesn’t have two directions than end right there and then…
-
-;;if there is, check if it is the original (points to the same place in memory), if its not, call this on the next line
-
-;;if it is the original, check if the count you have is the same as the overall line count
-;;means you have hit all the lines and it is a closed loop
-
-;;)
-
+	isboardvalid	
+)
 
 
 ;;------------------------
-	;;unimplemented for now
-	;;will inform the user of
-		;;bad move
-		;;make another move
-		;;game is over
 
+(defun findfirstline ()
+
+	(setq firstline nil)
+
+	(loop for i from 2 to (- (list-length linerepmap) 1) do
+		(loop for j from 1 to (list-length (elt linerepmap (- i 1))) do
+			(cond
+				(
+					(equal (elt (elt linerepmap (- i 1)) (- j 1)) '(line))
+					(setq firstline (list i j))
+					(Setq j (list-length (elt linerepmap (- i 1))))
+					(setq i (- (list-length linerepmap) 1))
+				)
+			)
+		)
+		
+	)
+	firstline
+)
+
+;;------------------------
+(defun findnextline ()
+
+	(cond
+		(
+			(equal linecount 0)
+			(setq currentline firstline)
+			(setq nextline (car (findlinenexttoyou currentline nil)))
+			
+			(setq linecount (+ 1 linecount))
+			(findnextline)
+		)
+		(	
+			(equal firstline nextline)
+			linecount
+		)
+		(t
+			(setq templine (car (findlinenexttoyou nextline currentline)))
+			(setq currentline nextline)
+			(setq nextline templine)
+			(setq linecount (+ 1 linecount))
+			(findnextline)
+		)
+	)
+	linecount	
+)
+
+;;------------------------
+(defun findlinenexttoyou (lineyouare linetoomit)
+
+	(if
+		(equal (mod (Car lineyouare) 2) 0)
+		(Setq linestoreturn
+			(findlinenexttoyoueven lineyouare)
+		)
+		(setq linestoreturn 
+			(findlinenexttoyouodd lineyouare)
+		)
+	)
+	(setq linestoreturn (remove linetoomit linestoreturn :test #'equal))
+)
+
+;;------------------------
+(defun findlinenexttoyouodd (lineyouare)
+
+	(setq listtoreturn '())
+	
+	
+	(if
+		(returnifline (- (car lineyouare) 1) (cadr lineyouare))
+		(setq listtoreturn
+			(append listtoreturn 
+				(list (list
+					(- (car lineyouare) 1) 
+					(cadr lineyouare)
+				))
+			)
+		)
+	)
+	(if
+		(returnifline (+ (car lineyouare) 1) (cadr lineyouare))
+		(setq listtoreturn
+			(append listtoreturn 
+				(list (list
+					(+ (car lineyouare) 1) 
+					(cadr lineyouare)
+				))
+			)
+		)
+	)
+	(if
+		(returnifline (- (car lineyouare) 1) (+ 1 (cadr lineyouare)))
+		(setq listtoreturn
+			(append listtoreturn 
+				(list (list
+					(- (car lineyouare) 1) 
+					(+ 1 (cadr lineyouare))
+				))
+			)
+		)
+	)
+	(if
+		(returnifline (+ (car lineyouare) 1) (+ 1 (cadr lineyouare)))
+		(setq listtoreturn
+			(append listtoreturn 
+				(list (list
+					(+ (car lineyouare) 1) 
+					(+ 1 (cadr lineyouare))
+				))
+			)
+		)
+	)
+	(if
+		(returnifline (+ (car lineyouare) 2) (cadr lineyouare))
+		(setq listtoreturn
+			(append listtoreturn 
+				(list (list
+					(+ (car lineyouare) 2) 
+					(cadr lineyouare)
+				))
+			)
+		)
+	)
+	(if
+		(returnifline (- (car lineyouare) 2) (cadr lineyouare))
+		(setq listtoreturn
+			(append listtoreturn 
+				(list (list
+					(- (car lineyouare) 2) 
+					(cadr lineyouare)
+				))
+			)
+		)
+	)
+	listtoreturn
+)
+
+;;------------------------
+(defun findlinenexttoyoueven (lineyouare)
+
+	(setq listtoreturn '())
+	
+	
+	(if
+		(returnifline (- (car lineyouare) 1) (cadr lineyouare))
+		(setq listtoreturn
+			(append listtoreturn 
+				(list (list
+					(- (car lineyouare) 1) 
+					(cadr lineyouare)
+				))
+			)
+		)
+	)
+	(if
+		(returnifline (+ (car lineyouare) 1) (cadr lineyouare))
+		(setq listtoreturn
+			(append listtoreturn 
+				(list (list
+					(+ (car lineyouare) 1) 
+					(cadr lineyouare)
+				))
+			)
+		)
+	)
+	(if
+		(returnifline (- (car lineyouare) 1) (- (cadr lineyouare) 1))
+		(setq listtoreturn
+			(append listtoreturn 
+				(list (list
+					(- (car lineyouare) 1)
+					(- (cadr lineyouare) 1)
+				))
+			)
+		)
+	)
+	(if
+		(returnifline (+ (car lineyouare) 1) (- (cadr lineyouare) 1))
+		(setq listtoreturn
+			(append listtoreturn 
+				(list (list
+					(+ (car lineyouare) 1) 
+					(- (cadr lineyouare) 1)
+				))
+			)
+		)
+	)
+	(if
+		(returnifline (car lineyouare) (- (cadr lineyouare) 1))
+		(setq listtoreturn
+			(append listtoreturn 
+				(list (list
+					(car lineyouare) 
+					(- (cadr lineyouare) 1)
+				))
+			)
+		)
+	)
+	(if
+		(returnifline (car lineyouare) (+ (cadr lineyouare) 1))
+		(setq listtoreturn
+			(append listtoreturn 
+				(list (list
+					(car lineyouare) 
+					(+ (cadr lineyouare) 1)
+				))
+			)
+		)
+	)
+	listtoreturn
+)
+
+;;------------------------
+(defun returnifline (rownumber columnnumber)
+
+	(equal (elt (elt linerepmap (- rownumber 1)) (- columnnumber 1)) '(line))
+)
+
+;;------------------------
 (defun statestring ()
 	(cond
 		( isboardvalid 
@@ -350,21 +591,14 @@
 		)
 	)
 )
-
-;; (defun linestring (stringtoline)
-;; 	(if aredotsvalid 
-;; 		(string "Intersections are valid")
-;; 		(string "Intersections are not valid")
-;; 	)
-;; )
-
+;;------------------------
 (defun dotstring ()
 	(if aredotsvalid 
 		(print "Intersections are valid")
 		(print "Some intersections are not valid")
 	)
 )
-
+;;------------------------
 (defun tilestring ()
 	(if aretilesvalid 
 		(print "Tiles are valid")
@@ -385,6 +619,8 @@
 	(+ (* number 2) 1 )
 )
 
+
+;;------------------------
 (defun makemap (mapname mapcontents)
 
 	 (set mapname mapcontents)
@@ -622,10 +858,9 @@
 	)
 )
 
-
 ;;------------------------
 (defun showgamerules ()
-	(princ
+	(format t 
 "Slither Link's Puzzle Loop is a game of wits, between you and the rules I will describe 
 here.
 
@@ -803,6 +1038,24 @@ Making a move:
 
 
 ==========================================================================================
+Restarting a game after exit:
+
+	A game that was currently being played, but you chose to make no more moves (either
+	by accident or on purpose) can be reset to the state you left it at by using the
+	function 'slither'
+	
+			CG-USER(23): (slither)
+
+			(+ = + * +) 
+			(* 2 * 2 *) 
+			(+ * + * +) 
+			(* 2 * 2 *) 
+			(+ * + * +) 
+			\"Some intersections are not valid\" 
+			\"Some tiles are not valid\" 
+			\"Board is still incorrect or not completed.\" Make another move? y/n: 
+
+==========================================================================================
 Winning a game:
 
 	A game is won by completing the board following the Slither's Puzzle Loop rules.
@@ -819,6 +1072,18 @@ Winning a game:
 	Type in the map name, and the process starts all over again.
 	
 	
-================================== Thanks for playing! ==================================
-		")
+================================== Thanks for playing! ==================================")
 )
+
+
+
+;;------------------------
+(setq maplist '())
+
+(makemap 'map1  '((2 2) (2 2)))
+(makemap 'map2 '((1 0) (3 @) (2 @)))
+(makemap 'map3 '((2 2 @ @ @) (@ 2 @ 2 2) (@ @ 3 @ @) (@ @ 0 @ @) (3 @ 3 @ @)) )
+(makemap 'map4 '((4)))
+(makemap 'map5 '((@ @) (3 3)))
+
+(makegameboard 'map1)
