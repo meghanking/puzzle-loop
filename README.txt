@@ -31,6 +31,7 @@ Content sections are in this order:
 	Printing a map before gameplay
 	Starting a game
 	Making a move
+	Restarting a game after exit
 	Winning the game
 
 ==========================================================================================
@@ -177,6 +178,24 @@ Making a move:
 		
 	This same move could have been accomplished with 2 1 R.
 
+
+==========================================================================================
+Restarting a game after exit:
+
+	A game that was currently being played, but you chose to make no more moves (either
+	by accident or on purpose) can be reset to the state you left it at by using the
+	function 'slither'
+	
+			CG-USER(23): (slither)
+
+			(+ = + * +) 
+			(* 2 * 2 *) 
+			(+ * + * +) 
+			(* 2 * 2 *) 
+			(+ * + * +) 
+			"Some intersections are not valid" 
+			"Some tiles are not valid" 
+			"Board is still incorrect or not completed." Make another move? y/n: 
 
 ==========================================================================================
 Winning a game:
