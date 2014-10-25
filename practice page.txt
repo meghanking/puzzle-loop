@@ -7,4 +7,4 @@
 (makemap 'map4 '((4)))
 (makemap 'map5 '((@ @) (3 3)))
 
-(makerepresentations 'map3)
+(makegameboard 'map1)
