@@ -738,18 +738,26 @@
 
 (defun getprintmap (currentmap)
 
-	(setq resultresult
+	(setq columnnumbered nil)
+
+		(loop for j from 0 to (- (list-length (car (eval (cadr currentmap)))) 1) do
+			(Setq columnnumbered (append columnnumbered (list j '-)))
+		)
+	
+	(setq result
 		(loop for i from 2 to (- (list-length (eval (cadr currentmap))) 1) collect
 			(cond
 				((equal 0 (mod i 2))
-					(printevenrow i (cadr currentmap))
+				 	(append (list '-)(printevenrow i (cadr currentmap)))
 				)
 				(t
-					(printoddrow i (cadr currentmap) (car currentmap))
+					(append (list (/ (- i 1) 2))(printoddrow i (cadr currentmap) (car currentmap)))
 				)
 			)
 		)
 	)
+	
+	(setq resultresult (append (list columnnumbered) result))
 )
 
 ;;------------------------
@@ -852,6 +860,7 @@
 (defun printmap ()
 
 	(setq resultresult (getprintmap currentmap))
+	
 	
 	(loop for i from 0 to (- (list-length resultresult) 1 ) do
 		(print (elt resultresult i))
