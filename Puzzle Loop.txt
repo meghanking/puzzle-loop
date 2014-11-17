@@ -1,40 +1,96 @@
 (defun slither ()
 	
-	(loop
-		(printmap)
-		(dotstring)
-		(tilestring)
-		(statestring) 
+	
+	(if ishuman
+	
+		(loop
+			(printstuff)
 		
-		(progn 
-			(format t "Make another move? y/n: ")
-			(Setq answer (read))
-		)
+			(progn 
+				(format t "Make another move? y/n: ")
+				(Setq answer (read))
+			)
 		
-		(when 
-			(cond
-				(
-					(equal answer 'y)
-					(progn 
-						(format t "Your next move it: ")
-						(makemove (read) (read) (read))
+			(when 
+				(cond
+					(
+						(equal answer 'y)
+						(progn 
+							(format t "Your next move it: ")
+							(makemove (read) (read) (read))
+						)
+						(checkallvalidity)
 					)
-					(checkallvalidity)
-				)
-				(t
-					(return "Thanks for playing!")
+					(t
+						(return "Thanks for playing!")
+					)
 				)
 			)
-		)
 
-		(when isboardvalid 
-        	(if (playgameagain)
-        		(slither)
-        		(return "Thanks for playing!")
-        	)
-        	(return nil)
-        )
-    )
+			(when isboardvalid 
+				(if (playgameagain)
+					(slither)
+					(return "Thanks for playing!")
+				)
+				(return nil)
+			)
+		)
+		
+		;;------ if AI -------
+		(loop
+			;;--------if they want the map printed at every point
+			(if printingwanted
+				(printstuff)
+				nil
+			)
+			
+			;;--------validate all the things------
+			
+			(checkallvalidity)
+			
+			;;-----------if it is stuck, do something different
+			(cond
+				(isAIstuck
+					(if (not printingwanted)
+						(printstuff)
+					)
+					(return "The AI is stuck and the above solution is as far as it has solved. Sorry my AI isn't smarter.")
+				)
+				(t
+					(if (not printingwanted)
+						(printstuff)
+					)
+					(return "This is a test")
+				)
+			)
+			
+			;;------ when the game is won ---------
+			(when isboardvalid 
+				(printstuff)
+				(if (playgameagain)
+					(slither)
+					(return "Thanks for playing!")
+				)
+				(return nil)
+			)
+		)
+	)
+)
+
+;;------------------------
+
+(defun printstuff ()
+	(printmap)
+	(printmovelist)
+	(dotstring)
+	(tilestring)
+	(statestring)
+)
+
+;;------------------------
+
+(defun printmovelist ()
+	(print movelist)
 )
 
 ;;------------------------
@@ -641,8 +697,17 @@
 	(setq aretilesvalid nil)
 	(setq isboardvalid nil)
 	(setq movelist '())
-	(setq statestring "Let the game begin")
-	;;(setq linestring "Let the game begin")
+	(if (y-or-n-p "Would you like the AI to solve this map?") 
+      (cond 
+      		(
+      			(y-or-n-p "Would you like the map to be printed for every move?") 
+      			(Setq ishuman nil) (Setq printingwanted t) (setq isAIstuck nil)
+      		)
+      		(t	(Setq ishuman nil) (Setq printingwanted nil) (setq isAIstuck nil)
+      		)
+      	)
+      	(setq ishuman t)	   
+	)
 	(setq currentmap (list mapname 'linerepmap 'dotrepmap 'tilerepmap 'movelist 'linenum))
 	(checkallvalidity)
 	(string "The game map is now set. Enter (slither) to start the game.")
