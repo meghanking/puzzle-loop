@@ -1,78 +1,86 @@
 (defun slither ()
-	
-	
 	(if ishuman
-	
-		(loop
-			(printstuff)
-		
-			(progn 
-				(format t "Make another move? y/n: ")
-				(Setq answer (read))
-			)
-		
-			(when 
-				(cond
-					(
-						(equal answer 'y)
-						(progn 
-							(format t "Your next move it: ")
-							(makemove (read) (read) (read))
-						)
-						(checkallvalidity)
-					)
-					(t
-						(return "Thanks for playing!")
-					)
-				)
-			)
+		(playhumangame)
+		(playAIgame)
+	)
+)
 
-			(when isboardvalid 
-				(if (playgameagain)
-					(slither)
+;;-----------------------
+(defun playhumangame ()
+
+	(loop
+		(printstuff)
+	
+		(progn 
+			(format t "Make another move? y/n: ")
+			(Setq answer (read))
+		)
+	
+		(when 
+			(cond
+				(
+					(equal answer 'y)
+					(progn 
+						(format t "Your next move it: ")
+						(makemove (read) (read) (read))
+					)
+					(checkallvalidity)
+				)
+				(t
 					(return "Thanks for playing!")
 				)
-				(return nil)
+			)
+		)
+
+		(when isboardvalid 
+			(if (playgameagain)
+				(slither)
+				(return "Thanks for playing!")
+			)
+			(return nil)
+		)
+	)
+)
+
+
+;;-----------------------
+(defun playAIgame ()
+
+	(loop
+		;;--------if they want the map printed at every point
+		(if printingwanted
+			(printstuff)
+			nil
+		)
+		
+		;;--------validate all the things------
+		
+		(checkallvalidity)
+		
+		;;-----------if it is stuck, do something different
+		(cond
+			(isAIstuck
+				(if (not printingwanted)
+					(printstuff)
+				)
+				(return "The AI is stuck and the above solution is as far as it has solved. Sorry my AI isn't smarter.")
+			)
+			(t
+				(if (not printingwanted)
+					(printstuff)
+				)
+				(return "This is a test")
 			)
 		)
 		
-		;;------ if AI -------
-		(loop
-			;;--------if they want the map printed at every point
-			(if printingwanted
-				(printstuff)
-				nil
+		;;------ when the game is won ---------
+		(when isboardvalid 
+			(printstuff)
+			(if (playgameagain)
+				(slither)
+				(return "Thanks for playing!")
 			)
-			
-			;;--------validate all the things------
-			
-			(checkallvalidity)
-			
-			;;-----------if it is stuck, do something different
-			(cond
-				(isAIstuck
-					(if (not printingwanted)
-						(printstuff)
-					)
-					(return "The AI is stuck and the above solution is as far as it has solved. Sorry my AI isn't smarter.")
-				)
-				(t
-					(if (not printingwanted)
-						(printstuff)
-					)
-					(return "This is a test")
-				)
-			)
-			
-			;;------ when the game is won ---------
-			(when isboardvalid 
-				(printstuff)
-				(if (playgameagain)
-					(slither)
-					(return "Thanks for playing!")
-				)
-				(return nil)
-			)
+			(return nil)
 		)
 	)
 )
