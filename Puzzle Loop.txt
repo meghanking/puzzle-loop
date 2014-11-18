@@ -21,7 +21,7 @@
 				(
 					(equal answer 'y)
 					(progn 
-						(format t "Your next move it: ")
+						(format t "Your next move is: ")
 						(makemove (read) (read) (read))
 					)
 					(checkallvalidity)
@@ -187,7 +187,6 @@
 		)
 		(print "Bad input")
 	)
-	(checkallvalidity)
 )
 
 ;;------------------------
@@ -210,7 +209,6 @@
 			
 	(loop for i from 1 to (list-length dotrepmap) collect
 		(mapcar #'checkdot (elt dotrepmap (- i 1)))
-
 	)
 			
 	aredotsvalid
@@ -269,6 +267,35 @@
 	(setq countofemptys (count '(empty) dottocheck :test #'equal))
 
 	(cond
+		( 
+			(not ishuman)
+			(cond	
+				(
+					(equal countofxs 3)
+					(rplaca (car (member '(empty) dottocheck :test #'equal)) 'x)
+				)
+				(
+					(equal countoflines 2) 
+					(if (> countofemptys 0) 
+						(loop for i from 1 to countofemptys do 
+							(rplaca (car (member '(empty) dottocheck :test #'equal)) 'x)
+						)
+					)
+				)
+				(
+					(equal countofxs 2)
+					(if (equal countoflines 1)
+						(rplaca (car (member '(empty) dottocheck :test #'equal)) 'line)
+					)
+				)
+			)
+			(setq countoflines (count '(line) dottocheck :test #'equal))
+			(setq countofxs ( + (count '(xx) dottocheck :test #'equal) (count '(x) dottocheck :test #'equal)))
+			(setq countofemptys (count '(empty) dottocheck :test #'equal))
+		)
+	)
+	
+	(cond
 		(
 			(equal countoflines 4) 
 			;;BAD
@@ -281,23 +308,17 @@
 		)
 		(
 			(equal countoflines 2)
-			;;OKAY
-			;;if some empty spots
-			;;set all the other lines to x's
 			(aredotsvalid t)
 		)
 		(
 			(equal countoflines 1)
-			 ;;BAD
-			 (aredotsvalid nil)
+			(aredotsvalid nil)
 		)
 		(
 			t
-			;;OKAY
-			;;if has any x's, set all the lines to x's
 			(aredotsvalid t)
 		)
-	)	
+	)
 )
 
 ;;------------------------
@@ -313,7 +334,34 @@
 	(setq countoflines (count '(line) tiletocheck :test #'equal))
 	(setq countofxs ( + (count '(xx) tiletocheck :test #'equal) (count '(x) tiletocheck :test #'equal)))
 	(setq countofemptys (count '(empty) tiletocheck :test #'equal))
-
+	
+	(cond
+		( (not ishuman)
+			(cond
+				(
+					(equal countoflines numberintile) 
+						(if (> countofemptys 0) 
+						(loop for i from 1 to countofemptys do 
+							(rplaca (car (member '(empty) tiletocheck :test #'equal)) 'x)
+						)
+					)	
+				)
+				(
+					(< countoflines numberintile) 
+						(if	(equal countofxs (- 4 numberintile))
+						(loop for i from 1 to countofemptys do 
+							(rplaca (car (member '(empty) tiletocheck :test #'equal)) 'line)
+						)
+					)
+				)
+			)
+			
+			(setq countoflines (count '(line) tiletocheck :test #'equal))
+			(setq countofxs ( + (count '(xx) tiletocheck :test #'equal) (count '(x) tiletocheck :test #'equal)))
+			(setq countofemptys (count '(empty) tiletocheck :test #'equal))
+		)
+	)
+	
 	(cond
 		( (equal numberintile nil)
 			(aretilesvalid t)
@@ -869,7 +917,7 @@
 			'x
 		)
 		((equal '(x) symbol) 
-			'*
+			‘*
 		)
 		((equal '(empty) symbol)
 			'*
