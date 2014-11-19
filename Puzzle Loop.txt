@@ -54,22 +54,19 @@
 		)
 		
 		;;--------validate all the things------
-		
+		(resetisAInotstuck)
 		(checkallvalidity)
 		
 		;;-----------if it is stuck, do something different
 		(cond
-			(isAIstuck
-				(if (not printingwanted)
-					(printstuff)
-				)
-				(return "The AI is stuck and the above solution is as far as it has solved. Sorry my AI isn't smarter.")
+			(isAInotstuck
+				
 			)
 			(t
 				(if (not printingwanted)
 					(printstuff)
 				)
-				(return "This is a test")
+				(return "The AI is stuck and the above solution is as far as it has solved. Sorry my AI isn't smarter.")
 			)
 		)
 		
@@ -273,20 +270,28 @@
 				(
 					(equal countofxs 3)
 					(rplaca (car (member '(empty) dottocheck :test #'equal)) 'x)
+					(isAInotstuck t)
 				)
 				(
 					(equal countoflines 2) 
-					(if (> countofemptys 0) 
+					(cond ( (> countofemptys 0) 
 						(loop for i from 1 to countofemptys do 
 							(rplaca (car (member '(empty) dottocheck :test #'equal)) 'x)
+						)
+						(isAInotstuck t)
 						)
 					)
 				)
 				(
 					(equal countofxs 2)
-					(if (equal countoflines 1)
+					(cond ( (equal countoflines 1)
 						(rplaca (car (member '(empty) dottocheck :test #'equal)) 'line)
+						(isAInotstuck t)
+						)
 					)
+				)
+				(t
+				(isAInotstuck nil)
 				)
 			)
 			(setq countoflines (count '(line) dottocheck :test #'equal))
@@ -322,11 +327,25 @@
 )
 
 ;;------------------------
+(defun isAInotstuck (value)
+
+	(setq isAInotstuck (or value isAInotstuck))
+)
+
+;;------------------------
+
+(defun resetisAInotstuck ()
+
+(setq isAInotstuck nil)
+
+)
+
+;;------------------------
 
 (defun checktile ( tiletocheck )
 
 	(if (equal (car tiletocheck) '@)
-		(setq numberintile nil)
+		(setq numberintile -1)
 		(setq numberintile (car tiletocheck))
 	)
 	
@@ -336,23 +355,44 @@
 	(setq countofemptys (count '(empty) tiletocheck :test #'equal))
 	
 	(cond
+		( (equal numberintile nil)
+			(aretilesvalid t)
+		)
 		( (not ishuman)
 			(cond
 				(
 					(equal countoflines numberintile) 
-						(if (> countofemptys 0) 
-						(loop for i from 1 to countofemptys do 
-							(rplaca (car (member '(empty) tiletocheck :test #'equal)) 'x)
+					(cond 
+						( 
+							(> countofemptys 0) 
+							(loop for i from 1 to countofemptys do 
+								(rplaca (car (member '(empty) tiletocheck :test #'equal)) 'x)
+							)
+							(isAInotstuck t)
+						)
+						(	t
+							(isAInotstuck nil)
 						)
 					)	
 				)
 				(
-					(< countoflines numberintile) 
-						(if	(equal countofxs (- 4 numberintile))
-						(loop for i from 1 to countofemptys do 
-							(rplaca (car (member '(empty) tiletocheck :test #'equal)) 'line)
+					t
+						(cond 
+							(	
+								(and (> countofemptys 0) (equal countofxs (- 4 numberintile)))
+								(loop for i from 1 to countofemptys do 
+									(rplaca (car (member '(empty) tiletocheck :test #'equal)) 'line)
+								)
+								(isAInotstuck t)
+							)
+							(	t
+								(isAInotstuck nil)
+							)
 						)
-					)
+								
+				)
+				(t
+					(isAInotstuck nil)
 				)
 			)
 			
@@ -757,9 +797,9 @@
       (cond 
       		(
       			(y-or-n-p "Would you like the map to be printed for every move?") 
-      			(Setq ishuman nil) (Setq printingwanted t) (setq isAIstuck nil)
+      			(Setq ishuman nil) (Setq printingwanted t) (setq isAInotstuck nil)
       		)
-      		(t	(Setq ishuman nil) (Setq printingwanted nil) (setq isAIstuck nil)
+      		(t	(Setq ishuman nil) (Setq printingwanted nil) (setq isAInotstuck nil)
       		)
       	)
       	(setq ishuman t)	   
@@ -917,7 +957,7 @@
 			'x
 		)
 		((equal '(x) symbol) 
-			‘*
+			'x
 		)
 		((equal '(empty) symbol)
 			'*
