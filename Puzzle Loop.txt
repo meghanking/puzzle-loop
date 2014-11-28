@@ -256,7 +256,7 @@
 
 
 ;;------------------------
-
+;;THIS NEEDS TO BE CHANGED
 (defun checkdot ( dottocheck )
 
 	(setq countoflines (count '(line) dottocheck :test #'equal))
@@ -341,7 +341,7 @@
 )
 
 ;;------------------------
-
+;;THIS NEEDS TO BE CHANGED
 (defun checktile ( tiletocheck )
 
 	(if (equal (car tiletocheck) '@)
@@ -534,6 +534,7 @@
 )
 
 ;;------------------------
+;;THIS NEEDS TO BE CHANGED
 (defun findnextline ()
 
 	(cond
@@ -561,6 +562,7 @@
 )
 
 ;;------------------------
+;;THIS NEEDS TO BE CHANGED
 (defun findlinenexttoyou (lineyouare linetoomit)
 
 	(if
@@ -576,6 +578,7 @@
 )
 
 ;;------------------------
+;;THIS NEEDS TO BE CHANGED
 (defun findlinenexttoyouodd (lineyouare)
 
 	(setq listtoreturn '())
@@ -651,6 +654,7 @@
 )
 
 ;;------------------------
+;;THIS NEEDS TO BE CHANGED
 (defun findlinenexttoyoueven (lineyouare)
 
 	(setq listtoreturn '())
@@ -726,6 +730,7 @@
 )
 
 ;;------------------------
+;;THIS NEEDS TO BE CHANGED
 (defun returnifline (rownumber columnnumber)
 
 	(equal (elt (elt linerepmap (- rownumber 1)) (- columnnumber 1)) '(line))
@@ -812,26 +817,25 @@
 
 
 ;;------------------------
-
 (defun makelinerepmap (rownum colnum)
 
 	(loop for i from 1 to (+ (* rownum 2) 3) collect
 		(cond 
 			((or (equal 1 i) (equal (+ (* rownum 2) 3) i))
-				(make-sequence 'list (+ 1 colnum) :initial-element '(xx)
-	)
+				(make-sequence 'list (+ 1 colnum) :initial-element '(xx))
 			)
 			((equal (mod i 2) 0)
-				(append 
-					(list '(xx)) 
-					(loop for i from 1 to colnum collect
-					(list 'empty))
-					(list '(xx))
+				(if (> (/ i 2) rownum)
+					(middleRowBottomLineRepMpa i)
+					(middleRowNotBottomLineRepMpa i)
 				)
 			)
 			(t 
-				(loop for i from 0 to colnum collect 
-					(list 'empty)
+				(append 
+					(loop for j from 0 to (- colnum 1) collect 
+						(list '(empty) (list (/ (- i 1) 2) (+ j 1) 'L))
+					)
+					(list (list '(empty) (list (/ (- i 1) 2) colnum 'R)))
 				)
 			)
 		)
@@ -839,8 +843,29 @@
 )
 
 ;;------------------------
+(defun middleRowNotBottomLineRepMpa(rrownum)
 
-(defun createdot (numberrow numbercol)		
+	(append 
+		(list '(xx)) 
+		(loop for j from 1 to colnum collect
+		(list '(empty) (list (/ rrownum 2) j 'T)))
+		(list '(xx))
+	)
+)
+
+;;------------------------
+(defun middleRowBottomLineRepMpa(rrownum)
+
+	(append 
+		(list '(xx)) 
+		(loop for j from 1 to colnum collect
+		(list '(empty) (list (- (/ rrownum 2) 1) j 'B)))
+		(list '(xx))
+	)
+)
+
+;;------------------------
+(defun createdot (numberrow numbercol linerepmap)		
 	(list 
 		(elt (elt linerepmap (- numberrow 1)) (- numbercol 1))
 	
@@ -853,7 +878,6 @@
 )
 
 ;;------------------------
-
 (defun makedotrepmap (linerepmap)
 
 	(remove nil
@@ -863,7 +887,7 @@
 						((equal (equal (mod i 2) 0) NIL)	 	
 						
 						(loop for j from 1 to (+ 1 colnum) collect
-							(createdot i j))
+							(createdot i j linerepmap))
 						)
 				)
 			)
@@ -874,7 +898,6 @@
 
 
 ;;------------------------
-
 (defun maketilerepmap (dotrepmap mapcontents)
  
 	(loop for i from 1 to (list-length mapcontents) collect
@@ -926,7 +949,7 @@
 (defun convertsymboleven (symbol)
 
 	(cond
-		((equal '(line) symbol)
+		((equal '(line) (car symbol))
 			'=
 		)(t 
 			(convertsymbolany symbol)
@@ -939,7 +962,7 @@
 (defun convertsymbolodd (symbol)
 
 	(cond 
-		((equal '(line) symbol)
+		((equal '(line) (car symbol))
 			'i
 		)
 		(t 
@@ -956,10 +979,10 @@
 		((equal '(xx) symbol) 
 			'x
 		)
-		((equal '(x) symbol) 
+		((equal '(x) (car symbol))
 			'x
 		)
-		((equal '(empty) symbol)
+		((equal '(empty) (car symbol))
 			'*
 		)
 	)
@@ -988,7 +1011,7 @@
 )
 
 ;;------------------------
-	
+
 (defun printoddrow (rowtoprint linerepmap mapname)
 	(setq symbols 
 		(mapcar #'convertsymbolodd 
