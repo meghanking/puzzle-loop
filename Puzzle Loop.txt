@@ -223,7 +223,7 @@
 ;;------------------------
 (defun tilesAI (tilerepmap)
 
-	(loop for i from 1 to (list-length tilerepmap) collect
+	(loop for i from 1 to (list-length tilerepmap) do
 		(mapcar #'tileAI (elt tilerepmap (- i 1)))
 	)
 )
@@ -231,8 +231,8 @@
 ;;------------------------
 (defun dotsAI (dotrepmap)
 
-	(loop for i from 1 to (list-length tilerepmap) collect
-		(mapcar #'dotAI (elt tilerepmap (- i 1)))
+	(loop for i from 1 to (list-length dotrepmap) do
+		(mapcar #'dotAI (elt dotrepmap (- i 1)))
 	)
 )
 
@@ -242,7 +242,7 @@
 
 	(resetaredotsvalid)	
 			
-	(loop for i from 1 to (list-length dotrepmap) collect
+	(loop for i from 1 to (list-length dotrepmap) do
 		(mapcar #'checkdot (elt dotrepmap (- i 1)))
 	)
 			
@@ -256,7 +256,7 @@
 
 	(resetaretilesvalid)
 
-	(loop for i from 1 to (list-length tilerepmap) collect
+	(loop for i from 1 to (list-length tilerepmap) do
 		(mapcar #'checktile (elt tilerepmap (- i 1)))
 
 	)
@@ -378,12 +378,12 @@
 	(cond
 		(
 			(equal countoflines 4) 
-			(setq isaifucked t)
+			;;(setq isaifucked t)
 			(aredotsvalid nil)
 		)
 		(
 			(equal countoflines 3) 
-			(Setq isaifucked t)
+			;;(Setq isaifucked t)
 			(aredotsvalid nil)
 		)
 		(
@@ -521,7 +521,7 @@
 				)
 				((> countofemptys 0)
 					;;fine
-					(print tiletocheck)
+					;;(print tiletocheck)
 					(aretilesvalid nil)
 				)
 				(t
@@ -529,7 +529,7 @@
 					;;BAD
 					;;which could happen because corners or something
 					;;bad juju
-					(print tiletocheck)
+					;;(print tiletocheck)
 					(aretilesvalid nil)
 				)
 			)
@@ -539,7 +539,7 @@
 			;;BAD
 			;;CANNOT HELP
 			;;BAD BAD BAD
-			(print tiletocheck)
+			;;(print tiletocheck)
 			(aretilesvalid nil)
 		)
 	)	
