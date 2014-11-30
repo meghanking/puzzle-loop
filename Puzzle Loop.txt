@@ -55,6 +55,7 @@
 		
 		;;--------validate all the things------
 		(resetisAInotstuck)
+		(doAllAI)
 		(checkallvalidity)
 		
 		;;-----------if it is stuck, do something different
@@ -95,7 +96,10 @@
 ;;------------------------
 
 (defun printmovelist ()
-	(print movelist)
+	
+	(loop for i from 0 to (- (list-length movelist) 1 ) do
+		(print (elt movelist i))
+	)
 )
 
 ;;------------------------
@@ -173,8 +177,8 @@
 		(cond
 			( 
 				(equal lineinquestion '(empty))
-				(setq linenum (+ 1 linenum))
-				(setq movelist (append movelist (list (list rownum colnum sidetoplaceline))))
+				(lineadded)
+				(addtomovelist (list rownum colnum sidetoplaceline) 'line '"Human request")
 				(rplaca lineinquestion 'line)
 			)
 			(
@@ -188,14 +192,48 @@
 
 ;;------------------------
 
-(defun checkallvalidity ()
+(defun lineadded ()
 
+	(setq linenum (+ 1 linenum))
+
+)
+
+
+;;------------------------
+
+(defun checkallvalidity ()
+	
 	(setq validitychecks (list (checkdots dotrepmap) (checktiles tilerepmap)))
 	(if
 		(equal (member nil validitychecks) nil)
 		(isclosedcircut)
 	)	
 	isboardvalid
+)
+
+;;------------------------
+
+(defun doAllAI ()
+
+	(tilesAI tilerepmap)
+	(dotsAI dotrepmap)
+
+)
+
+;;------------------------
+(defun tilesAI (tilerepmap)
+
+	(loop for i from 1 to (list-length tilerepmap) collect
+		(mapcar #'tileAI (elt tilerepmap (- i 1)))
+	)
+)
+
+;;------------------------
+(defun dotsAI (dotrepmap)
+
+	(loop for i from 1 to (list-length tilerepmap) collect
+		(mapcar #'dotAI (elt tilerepmap (- i 1)))
+	)
 )
 
 ;;------------------------
@@ -254,61 +292,98 @@
 
 )
 
+;;------------------------
+(defun ccount (thingtocount thingtocounton)
+	
+	(Setq total 0)
+	(loop for i from 0 to (- (list-length thingtocounton) 1)  do
+		(if (listp (elt thingtocounton i))
+		(Setq total (+ total (count thingtocount (elt thingtocounton i) :test #'equal)))
+		)
+	)
+	total
+)
+
+;;------------------------
+(defun mmember (thingtomember thingtomemberon)
+	
+	(Setq result nil)
+	(loop for i from 0 to (- (list-length thingtomemberon) 1)  do
+		(cond
+			(	
+				(listp (elt thingtomemberon i))
+				(Setq result (member thingtomember (elt thingtomemberon i) :test #'equal))
+				(if (not (equal result '() ) )
+					(setq i (list-length thingtomemberon))
+			
+				)
+			)
+		)
+	)
+	result
+)
+
+;;------------------------
+(defun dotAI ( dottocheck )
+
+	(setq countoflines (ccount '(line) dottocheck))
+	(setq countofxs ( + (ccount '(xx) dottocheck) (ccount '(x) dottocheck)))
+	(setq countofemptys (ccount '(empty) dottocheck))
+
+	(cond	
+		(
+			(equal countofxs 3)
+			(Setq changing (mmember '(empty) dottocheck))
+			(rplaca (car changing) 'x)
+			(addtomovelist (cadr changing) 'x '"count of x's was 3 in intersection, so empty -> x.")
+			(isAInotstuck t)
+		)
+		(
+			(and (equal countoflines 2) (> countofemptys 0) )
+
+			(loop for i from 1 to countofemptys do 
+				(setq changing (mmember '(empty) dottocheck))
+				(rplaca (car changing) 'x)
+				(addtomovelist (Cadr changing) 'x '"count of lines in intersection was 2, so empty -> x.")
+			)
+						
+			(isAInotstuck t)
+
+		)
+		(
+			(equal countofxs 2)
+			(cond ( (equal countoflines 1)
+				(Setq changing (mmember '(empty) dottocheck))
+				(rplaca (car changing) 'line)
+				(lineadded)
+				(addtomovelist (cadr changing) 'line '"count of x's was 2 and line was 1 in intersection, so empty -> line.")
+				(isAInotstuck t)
+				)
+			)
+		)
+		(t
+		(isAInotstuck nil)
+		)
+	)
+)
 
 ;;------------------------
 ;;THIS NEEDS TO BE CHANGED
 (defun checkdot ( dottocheck )
 
-	(setq countoflines (count '(line) dottocheck :test #'equal))
-	(setq countofxs ( + (count '(xx) dottocheck :test #'equal) (count '(x) dottocheck :test #'equal)))
-	(setq countofemptys (count '(empty) dottocheck :test #'equal))
+	(setq countoflines (ccount '(line) dottocheck))
+	(setq countofxs ( + (ccount '(xx) dottocheck) (ccount '(x) dottocheck)))
+	(setq countofemptys (ccount '(empty) dottocheck))
 
-	(cond
-		( 
-			(not ishuman)
-			(cond	
-				(
-					(equal countofxs 3)
-					(rplaca (car (member '(empty) dottocheck :test #'equal)) 'x)
-					(isAInotstuck t)
-				)
-				(
-					(equal countoflines 2) 
-					(cond ( (> countofemptys 0) 
-						(loop for i from 1 to countofemptys do 
-							(rplaca (car (member '(empty) dottocheck :test #'equal)) 'x)
-						)
-						(isAInotstuck t)
-						)
-					)
-				)
-				(
-					(equal countofxs 2)
-					(cond ( (equal countoflines 1)
-						(rplaca (car (member '(empty) dottocheck :test #'equal)) 'line)
-						(isAInotstuck t)
-						)
-					)
-				)
-				(t
-				(isAInotstuck nil)
-				)
-			)
-			(setq countoflines (count '(line) dottocheck :test #'equal))
-			(setq countofxs ( + (count '(xx) dottocheck :test #'equal) (count '(x) dottocheck :test #'equal)))
-			(setq countofemptys (count '(empty) dottocheck :test #'equal))
-		)
-	)
-	
 	(cond
 		(
 			(equal countoflines 4) 
-			;;BAD
+			(setq isaifucked t)
 			(aredotsvalid nil)
 		)
 		(
 			(equal countoflines 3) 
-			;;BAD
+			(Setq isaifucked t)
 			(aredotsvalid nil)
 		)
 		(
@@ -341,7 +416,76 @@
 )
 
 ;;------------------------
-;;THIS NEEDS TO BE CHANGED
+
+(defun addtomovelist ( placeyouchanged whatyouchangedto whyyouchangedit)
+
+	(Setq movelist (append movelist (list (list placeyouchanged whatyouchangedto whyyouchangedit))))
+
+)
+
+;;------------------------
+;;THIS NEEDS TO BE CHANGED ;;I AM HERE
+
+(defun tileAI ( tiletocheck )
+
+	(if (equal (car tiletocheck) '@)
+		(setq numberintile -1)
+		(setq numberintile (car tiletocheck))
+	)
+	
+	(setq countoflines (ccount '(line) tiletocheck))
+	(setq countofxs ( + (ccount '(xx) tiletocheck) (ccount '(x) tiletocheck)))
+	(setq countofemptys (ccount '(empty) tiletocheck))
+	
+	(cond
+		(	
+			(equal numberintile -1)
+			(isAInotstuck nil)
+		)
+		( 
+			(equal countoflines numberintile) 
+			(cond 
+				( 
+					(> countofemptys 0) 
+					(loop for i from 1 to countofemptys do 
+						(Setq changing (mmember '(empty) tiletocheck ))
+						(rplaca (Car changing) 'x)
+						(addtomovelist (cadr changing) 'x '"count of lines was equal to number in tile, so empty -> x.")
+					)
+					(isAInotstuck t)
+				)
+				(	t
+					(isAInotstuck nil)
+				)
+			)	
+		)
+		(
+			t
+				(cond 
+					(	
+						(and (> countofemptys 0) (equal countofxs (- 4 numberintile)))
+						(loop for i from 1 to countofemptys do 
+							(Setq changing (mmember '(empty) tiletocheck))
+							(rplaca (Car changing) 'line)
+							(lineadded)
+							(addtomovelist (cadr changing) 'line '"count of x's was equal to 4 - number in tile, so empty -> line.")
+						)
+						(isAInotstuck t)
+					)
+					(	t
+						(isAInotstuck nil)
+					)
+				)
+						
+		)
+		(	
+			t
+			(isAInotstuck nil)
+		)
+	)	
+)
+
+;;------------------------
 (defun checktile ( tiletocheck )
 
 	(if (equal (car tiletocheck) '@)
@@ -349,61 +493,12 @@
 		(setq numberintile (car tiletocheck))
 	)
 	
-	
-	(setq countoflines (count '(line) tiletocheck :test #'equal))
-	(setq countofxs ( + (count '(xx) tiletocheck :test #'equal) (count '(x) tiletocheck :test #'equal)))
-	(setq countofemptys (count '(empty) tiletocheck :test #'equal))
-	
-	(cond
-		( (equal numberintile nil)
-			(aretilesvalid t)
-		)
-		( (not ishuman)
-			(cond
-				(
-					(equal countoflines numberintile) 
-					(cond 
-						( 
-							(> countofemptys 0) 
-							(loop for i from 1 to countofemptys do 
-								(rplaca (car (member '(empty) tiletocheck :test #'equal)) 'x)
-							)
-							(isAInotstuck t)
-						)
-						(	t
-							(isAInotstuck nil)
-						)
-					)	
-				)
-				(
-					t
-						(cond 
-							(	
-								(and (> countofemptys 0) (equal countofxs (- 4 numberintile)))
-								(loop for i from 1 to countofemptys do 
-									(rplaca (car (member '(empty) tiletocheck :test #'equal)) 'line)
-								)
-								(isAInotstuck t)
-							)
-							(	t
-								(isAInotstuck nil)
-							)
-						)
-								
-				)
-				(t
-					(isAInotstuck nil)
-				)
-			)
-			
-			(setq countoflines (count '(line) tiletocheck :test #'equal))
-			(setq countofxs ( + (count '(xx) tiletocheck :test #'equal) (count '(x) tiletocheck :test #'equal)))
-			(setq countofemptys (count '(empty) tiletocheck :test #'equal))
-		)
-	)
+	(setq countoflines (ccount '(line) tiletocheck))
+	(setq countofxs ( + (ccount '(xx) tiletocheck) (ccount '(x) tiletocheck)))
+	(setq countofemptys (ccount '(empty) tiletocheck))
 	
 	(cond
-		( (equal numberintile nil)
+		( (equal numberintile -1)
 			(aretilesvalid t)
 		)
 		(
@@ -426,6 +521,7 @@
 				)
 				((> countofemptys 0)
 					;;fine
+					(print tiletocheck)
 					(aretilesvalid nil)
 				)
 				(t
@@ -433,6 +529,7 @@
 					;;BAD
 					;;which could happen because corners or something
 					;;bad juju
+					(print tiletocheck)
 					(aretilesvalid nil)
 				)
 			)
@@ -442,6 +539,7 @@
 			;;BAD
 			;;CANNOT HELP
 			;;BAD BAD BAD
+			(print tiletocheck)
 			(aretilesvalid nil)
 		)
 	)	
@@ -512,7 +610,7 @@
 
 
 ;;------------------------
-
+;;THIS NEEDS TO BE CHANGED
 (defun findfirstline ()
 
 	(setq firstline nil)
@@ -521,8 +619,8 @@
 		(loop for j from 1 to (list-length (elt linerepmap (- i 1))) do
 			(cond
 				(
-					(equal (elt (elt linerepmap (- i 1)) (- j 1)) '(line))
-					(setq firstline (list i j))
+					(equal (car (elt (elt linerepmap (- i 1)) (- j 1)) ) '(line))
+					(setq firstline (list (eval i) (eval j)))
 					(Setq j (list-length (elt linerepmap (- i 1))))
 					(setq i (- (list-length linerepmap) 1))
 				)
@@ -733,7 +831,7 @@
 ;;THIS NEEDS TO BE CHANGED
 (defun returnifline (rownumber columnnumber)
 
-	(equal (elt (elt linerepmap (- rownumber 1)) (- columnnumber 1)) '(line))
+	(equal (car (elt (elt linerepmap (- rownumber 1)) (- columnnumber 1))) '(line))
 )
 
 ;;------------------------
@@ -810,7 +908,6 @@
       	(setq ishuman t)	   
 	)
 	(setq currentmap (list mapname 'linerepmap 'dotrepmap 'tilerepmap 'movelist 'linenum))
-	(checkallvalidity)
 	(string "The game map is now set. Enter (slither) to start the game.")
 )
 
@@ -822,7 +919,7 @@
 	(loop for i from 1 to (+ (* rownum 2) 3) collect
 		(cond 
 			((or (equal 1 i) (equal (+ (* rownum 2) 3) i))
-				(make-sequence 'list (+ 1 colnum) :initial-element '(xx))
+				(make-sequence 'list (+ 1 colnum) :initial-element '((xx)))
 			)
 			((equal (mod i 2) 0)
 				(if (> (/ i 2) rownum)
@@ -833,9 +930,9 @@
 			(t 
 				(append 
 					(loop for j from 0 to (- colnum 1) collect 
-						(list '(empty) (list (/ (- i 1) 2) (+ j 1) 'L))
+						(list (list 'empty) (list (/ (- i 1) 2) (+ j 1) 'L))
 					)
-					(list (list '(empty) (list (/ (- i 1) 2) colnum 'R)))
+					(list (list (list 'empty) (list (/ (- i 1) 2) colnum 'R)))
 				)
 			)
 		)
@@ -846,10 +943,10 @@
 (defun middleRowNotBottomLineRepMpa(rrownum)
 
 	(append 
-		(list '(xx)) 
+		(list '((xx))) 
 		(loop for j from 1 to colnum collect
-		(list '(empty) (list (/ rrownum 2) j 'T)))
-		(list '(xx))
+		(list (list 'empty) (list (/ rrownum 2) j 'T)))
+		(list '((xx)))
 	)
 )
 
@@ -857,10 +954,10 @@
 (defun middleRowBottomLineRepMpa(rrownum)
 
 	(append 
-		(list '(xx)) 
+		(list '((xx)))
 		(loop for j from 1 to colnum collect
-		(list '(empty) (list (- (/ rrownum 2) 1) j 'B)))
-		(list '(xx))
+		(list (list 'empty) (list (- (/ rrownum 2) 1) j 'B)))
+		(list '((xx)))
 	)
 )
 
@@ -1279,4 +1376,4 @@ Winning a game:
 (makemap 'map4 '((4)))
 (makemap 'map5 '((@ @) (3 3)))
 
-(makegameboard 'map1)
+(makegameboard 'map2)
