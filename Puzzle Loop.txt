@@ -1,3 +1,90 @@
+(defun deepcopyCurrentGame ()
+
+	(setq aredotsvalid nil)
+	(setq aretilesvalid nil)
+	(setq isboardvalid nil)
+	
+	(append mapcopylist 
+		
+		(list 
+			(currentmap (car currentmap))
+			(deepcopylinerepmap (cadr currentmap))
+			(deepcopydotrepmap (caddr currentmap))
+			(deepcopytilerepmap (cadddr currentmap))
+			movelist
+			mapcopylist	
+		)
+	)
+)
+
+
+;;-----------------------
+(defun currentmap ()
+
+	(print (Car currentmap))
+	
+	(print "Line Rep Map")
+	(if (equal (cadr currentmap) nil)
+		(print "There is no linerepmap")
+		(loop for i from 0 to (- (list-length (cadr currentmap)) 1) do
+			(print (elt (cadr currentmap) i))
+		)
+	)
+	
+	(print "Dot Rep Map")
+	(if (equal (caddr currentmap) nil)
+		(print "There is no dotrepmap")
+		(loop for i from 0 to  (- (list-length (caddr currentmap)) 1) do
+			(print (elt (caddr currentmap) i))
+		)
+	)
+	
+	(print "Tile Rep Map")
+	(if (equal (cadddr currentmap) nil)
+		(print "There is no tilerepmap")
+		(loop for i from 0 to  (- (list-length (cadddr currentmap)) 1) do
+			(print (elt (cadddr currentmap) i))
+		)
+	)
+	
+	'"do the rest later"
+
+)
+
+;;-----------------------
+
+(defun makegameboard (mapname) 
+
+	(setq aredotsvalid nil)
+	(setq aretilesvalid nil)
+	(setq isboardvalid nil)
+	(setq movelist nil)
+	(if (y-or-n-p "Would you like the AI to solve this map?") 
+      (cond 
+      		(
+      			(y-or-n-p "Would you like the map to be printed for every move?") 
+      			(Setq ishuman nil) (Setq printingwanted t) (setq isAInotstuck nil)
+      		)
+      		(t	(Setq ishuman nil) (Setq printingwanted nil) (setq isAInotstuck nil)
+      		)
+      	)
+      	(setq ishuman t)	   
+	)
+	(setq currentmap 
+		(list 
+			mapname
+			(makelinerepmap (list-length (eval mapname)) (list-length (car (eval mapname))))
+		)
+	)
+	(setq currentmap (append currentmap (list (makedotrepmap (cadr currentmap) (list-length (car (eval mapname)))))))
+	(Setq currentmap (append currentmap (list (maketilerepmap  (caddr currentmap) (eval mapname)))))
+	(Setq currentmap (append currentmap (list movelist)  (list nil)))
+	(string "The game map is now set. Enter (slither) to start the game.")
+)
+
+
+;;-----------------------
+
 (defun slither ()
 	(if ishuman
 		(playhumangame)
@@ -87,7 +174,7 @@
 
 (defun printstuff (currentmap)
 	(printmap currentmap)
-	(printmovelist (eval (car (cddddr currentmap))))
+	(printmovelist (car (cddddr currentmap)))
 	(dotstring)
 	(tilestring)
 	(statestring)
@@ -193,7 +280,7 @@
 
 (defun linenum (currentmap)
 
-	(ccount 'line (eval (car (cddddr currentmap))))
+	(ccount 'line (car (cddddr currentmap)))
 	
 )
 
@@ -202,7 +289,7 @@
 
 (defun checkallvalidity (currentmap)
 	
-	(setq validitychecks (list (checkdots (eval (caddr currentmap))) (checktiles (eval (cadddr currentmap)))))
+	(setq validitychecks (list (checkdots (caddr currentmap)) (checktiles (cadddr currentmap))))
 	(if
 		(equal (member nil validitychecks) nil)
 		(isclosedcircut currentmap)
@@ -214,9 +301,9 @@
 
 (defun doAllAI (currentmap)
 
-	(tilesNumAI (eval (cadddr currentmap)) (eval (caddr currentmap)))
-	(tilesAI (eval (cadddr currentmap)))
-	(dotsAI (eval (caddr currentmap)))
+	(tilesNumAI (cadddr currentmap) (caddr currentmap))
+	(tilesAI (cadddr currentmap))
+	(dotsAI (caddr currentmap))
 )
 
 ;;------------------------
@@ -806,7 +893,7 @@
 			(setq isboardvalid nil)
 		)
 		(t
-			(findfirstline (eval (cadr currentmap)))		;;firstline will now be set with some 
+			(findfirstline (cadr currentmap))		;;firstline will now be set with some 
 			(Setq linecount 0)
 			(Setq nextline nil)
 			(setq currentline nil)
@@ -1042,7 +1129,7 @@
 ;;THIS NEEDS TO BE CHANGED
 (defun returnifline (rownumber columnnumber currentmap)
 
-	(equal (car (elt (elt (eval (cadr currentmap)) (- rownumber 1)) (- columnnumber 1))) '(line))
+	(equal (car (elt (elt (cadr currentmap)) (- rownumber 1)) (- columnnumber 1)) '(line))
 )
 
 ;;------------------------
@@ -1093,36 +1180,6 @@
 	 (setq maplist (append maplist (list mapname)))
  )
 
-;;------------------------
-
-(defun makegameboard (mapname) 
-
-	(setq rownum (list-length (eval mapname)) )
-	(setq colnum (list-length (car (eval mapname))))
-	(setq linerepmap (makelinerepmap rownum colnum))
-	(setq dotrepmap (makedotrepmap linerepmap))
-	(setq tilerepmap (maketilerepmap dotrepmap (eval mapname)))
-	(setq aredotsvalid nil)
-	(setq aretilesvalid nil)
-	(setq isboardvalid nil)
-	(setq mapcopylist nil)
-	(setq movelist '())
-	(if (y-or-n-p "Would you like the AI to solve this map?") 
-      (cond 
-      		(
-      			(y-or-n-p "Would you like the map to be printed for every move?") 
-      			(Setq ishuman nil) (Setq printingwanted t) (setq isAInotstuck nil)
-      		)
-      		(t	(Setq ishuman nil) (Setq printingwanted nil) (setq isAInotstuck nil)
-      		)
-      	)
-      	(setq ishuman t)	   
-	)
-	(setq currentmap (list mapname 'linerepmap 'dotrepmap 'tilerepmap 'movelist mapcopylist))
-	(string "The game map is now set. Enter (slither) to start the game.")
-)
-
-
 
 ;;------------------------
 (defun makelinerepmap (rownum colnum)
@@ -1134,8 +1191,8 @@
 			)
 			((equal (mod i 2) 0)
 				(if (> (/ i 2) rownum)
-					(middleRowBottomLineRepMpa i)
-					(middleRowNotBottomLineRepMpa i)
+					(middleRowBottomLineRepMpa i colnum)
+					(middleRowNotBottomLineRepMpa i colnum)
 				)
 			)
 			(t 
@@ -1151,7 +1208,7 @@
 )
 
 ;;------------------------
-(defun middleRowNotBottomLineRepMpa(rrownum)
+(defun middleRowNotBottomLineRepMpa(rrownum colnum)
 
 	(append 
 		(list '((xx))) 
@@ -1162,7 +1219,7 @@
 )
 
 ;;------------------------
-(defun middleRowBottomLineRepMpa(rrownum)
+(defun middleRowBottomLineRepMpa(rrownum colnum)
 
 	(append 
 		(list '((xx)))
@@ -1186,14 +1243,14 @@
 )
 
 ;;------------------------
-(defun makedotrepmap (linerepmap)
+(defun makedotrepmap (linerepmap colnum)
 
 	(remove nil
 		(setq listofdots
 			(loop for i from 1 to (- (list-length linerepmap) 1) collect
+				
 				(cond
-						((equal (equal (mod i 2) 0) NIL)	 	
-						
+						((equal (equal (mod i 2) 0) NIL)
 						(loop for j from 1 to (+ 1 colnum) collect
 							(createdot i j linerepmap))
 						)
@@ -1211,19 +1268,14 @@
 	(loop for i from 1 to (list-length mapcontents) collect
 		(loop for j from 1 to (list-length (car mapcontents)) collect
 			(list (elt (elt mapcontents (- i 1)) (- j 1))
-
 			(elt (elt (elt dotrepmap (- i 1)) (- j 1)) 1)
-
 			(elt (elt (elt dotrepmap i) j) 0)
-		
 			(elt (elt (elt dotrepmap i) j) 3)
-		
 			(elt (elt (elt dotrepmap (- i 1)) (- j 1)) 2)
-			
 			)
 		)	
 	)
- )
+)
 
 
 ;;------------------------
@@ -1232,12 +1284,12 @@
 
 	(setq columnnumbered nil)
 
-		(loop for j from 0 to (- (list-length (car (eval (cadr currentmap)))) 1) do
+		(loop for j from 0 to (- (list-length (car (cadr currentmap))) 1) do
 			(Setq columnnumbered (append columnnumbered (list j '-)))
 		)
 	
 	(setq result
-		(loop for i from 2 to (- (list-length (eval (cadr currentmap))) 1) collect
+		(loop for i from 2 to (- (list-length (cadr currentmap)) 1) collect
 			(cond
 				((equal 0 (mod i 2))
 				 	(append (list '-)(printevenrow i (cadr currentmap)))
@@ -1299,7 +1351,7 @@
 ;;------------------------
 
 (defun printevenrow (rowtoprint linerepmap)
-	(setq lines (mapcar #'convertsymboleven (elt (eval linerepmap) (- rowtoprint 1))
+	(setq lines (mapcar #'convertsymboleven (elt linerepmap (- rowtoprint 1))
 	))
 	 
 	(setq result '())
@@ -1323,7 +1375,7 @@
 (defun printoddrow (rowtoprint linerepmap mapname)
 	(setq symbols 
 		(mapcar #'convertsymbolodd 
-			(elt (eval linerepmap) (- rowtoprint 1)
+			(elt linerepmap (- rowtoprint 1)
 			)
 		)
 	)
