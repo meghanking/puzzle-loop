@@ -1,84 +1,190 @@
-(defun deepcopyCurrentGame ()
+(defun deepcopyCurrentGame (currentmap)
 
 	(setq aredotsvalid nil)
 	(setq aretilesvalid nil)
 	(setq isboardvalid nil)
 	
-	(append mapcopylist 
+	(setq newmap
 		
 		(list 
-			(currentmap (car currentmap))
+			(car currentmap)
 			(deepcopylinerepmap (cadr currentmap))
-			(deepcopydotrepmap (caddr currentmap))
-			(deepcopytilerepmap (cadddr currentmap))
-			movelist
-			mapcopylist	
+		)
+	)
+	(setq newmap (append newmap (list (makedotrepmap (cadr newmap) (list-length (car (eval (car currentmap))))))))
+	(Setq newmap (append newmap (list (maketilerepmap  (caddr newmap) (eval (car currentmap))))))
+	(Setq newmap (append newmap (list (car (cddddr currentmap)))))
+	(Setq newmap (append newmap (list (list nil))))
+	(setq gamemaps (append (list newmap) gamemaps))
+	
+)
+
+;;-----------------------
+(defun deepcopylinerepmap (original)
+
+	(loop for i from 1 to (list-length original) collect	
+		(cond
+			;;first or last row
+			((or (equal 1 i) (equal (list-length original) i))
+				(make-sequence 'list (list-length (car original)) :initial-element '((xx)))
+			)
+			;;middlerowseven
+			((equal (mod i 2) 0)
+				(middleRowEvenLineRepMapDeepCopy (elt original (- i 1)))
+			)
+			;;middlerows odd
+			(t 
+				(middleRowOddLineRepMapDeepCopy (elt original (- i 1)))
+			)
 		)
 	)
 )
 
+;;-----------------------
+(defun middleRowEvenLineRepMapDeepCopy (originalrow)
+	
+	(append 
+		(list '((xx))) 
+		(loop for j from 1 to (- (list-length originalrow) 2) collect
+			(list (list (caar (elt originalrow j))) (cadr (elt originalrow j)))
+		)
+		(list '((xx)))
+	)
+)
 
 ;;-----------------------
-(defun currentmap ()
+(defun middleRowOddLineRepMapDeepCopy (originalrow)
+
+	(loop for j from 0 to (- (list-length originalrow) 1) collect
+		(list (list (caar (elt originalrow j))) (cadr (elt originalrow j)))
+	)
+)
+
+;;-----------------------
+(defun findintersectiontoguesswith (dotrepmap restrictionlist)
+
+	(Setq nothavefallback t)
+	(Setq fallback nil)
+	(setq changing nil)
+	(loop for i from 0 to (- (list-length dotrepmap) 1) do
+		(loop for j from 0 to (- (list-length (elt dotrepmap i)) 1) do
+			(cond 
+				(
+					(not (equal (member (elt (elt dotrepmap i) j) restrictionlist) nil))
+					;;do nothing
+				)
+				(
+					(and (not (equal (mmember '(line) (elt (elt dotrepmap i) j)) nil)) (not (equal (mmember '(empty) (elt (elt dotrepmap i) j)) nil)))
+					(Setq changing (mmember '(empty) (elt (elt dotrepmap i) j)))
+					(Setq j (- (list-length (elt dotrepmap i)) 1))
+					(Setq i (- (list-length dotrepmap) 1))
+				)
+				(	(and nothavefallback (not (equal (mmember '(empty) (elt (elt dotrepmap i) j)) nil)))
+					(setq fallback (mmember '(empty) (elt (elt dotrepmap i) j)))
+					(setq nothavefallback nil)
+				)
+			)
+		)
+	)
+	(if (equal changing nil)
+		fallback
+		changing
+	)
+)
+
+;;-----------------------
+(defun currentmap (currentmap)
 
 	(print (Car currentmap))
 	
 	(print "Line Rep Map")
 	(if (equal (cadr currentmap) nil)
 		(print "There is no linerepmap")
-		(loop for i from 0 to (- (list-length (cadr currentmap)) 1) do
-			(print (elt (cadr currentmap) i))
-		)
+		(printlinerepmap (cadr currentmap))
 	)
 	
 	(print "Dot Rep Map")
 	(if (equal (caddr currentmap) nil)
 		(print "There is no dotrepmap")
-		(loop for i from 0 to  (- (list-length (caddr currentmap)) 1) do
-			(print (elt (caddr currentmap) i))
-		)
+		(printdotrepmap (caddr currentmap))
 	)
 	
 	(print "Tile Rep Map")
 	(if (equal (cadddr currentmap) nil)
 		(print "There is no tilerepmap")
-		(loop for i from 0 to  (- (list-length (cadddr currentmap)) 1) do
-			(print (elt (cadddr currentmap) i))
-		)
+		(printtilerepmap (cadddr currentmap))
 	)
 	
-	'"do the rest later"
-
+	(print "Move List")
+	(printmovelist (car (cddddr currentmap)))
+	
+	(print "Guess List")
+	(loop for i from 0 to (- (list-length (cadr (cddddr currentmap))) 1) do
+		(print (elt (cadr (cddddr currentmap)) i))
+	)
 )
 
 ;;-----------------------
+(defun printlinerepmap (linerepmap)
 
+	(loop for i from 0 to (- (list-length linerepmap) 1) do
+		(print (elt linerepmap i))
+	)
+)
+
+;;-----------------------
+(defun printtilerepmap (tilerepmap)
+
+	(loop for i from 0 to  (- (list-length tilerepmap) 1) do
+		(print (elt tilerepmap i))
+	)
+)
+
+;;-----------------------
+(defun printdotrepmap (dotrepmap)
+
+	(loop for i from 0 to  (- (list-length dotrepmap) 1) do
+		(print (elt dotrepmap i))
+	)
+)
+
+;;-----------------------
 (defun makegameboard (mapname) 
 
 	(setq aredotsvalid nil)
 	(setq aretilesvalid nil)
 	(setq isboardvalid nil)
-	(setq movelist nil)
-	(if (y-or-n-p "Would you like the AI to solve this map?") 
-      (cond 
-      		(
-      			(y-or-n-p "Would you like the map to be printed for every move?") 
-      			(Setq ishuman nil) (Setq printingwanted t) (setq isAInotstuck nil)
+	(Setq isaifucked nil)
+	(cond 
+		(	t
+			(y-or-n-p "Would you like the AI to solve this map?") 
+			(if (y-or-n-p "Will this be timed?") 
+      			(cond
+      				( t
+      					(Setq istimed t) (Setq ishuman nil) (Setq printingwanted nil) (setq isAInotstuck nil)
+      				)
+      			)
+      			(cond
+      				(	(y-or-n-p "Would you like the map to be printed for every move?") 
+						(setq istimed nil) (Setq ishuman nil) (Setq printingwanted t) (setq isAInotstuck nil)
+					)
+					( t
+						(setq istimed nil) (Setq ishuman nil) (Setq printingwanted nil) (setq isAInotstuck nil)
+					)
+      			)
       		)
-      		(t	(Setq ishuman nil) (Setq printingwanted nil) (setq isAInotstuck nil)
-      		)
-      	)
-      	(setq ishuman t)	   
+		)	
 	)
-	(setq currentmap 
+	(setq originalmap 
 		(list 
 			mapname
 			(makelinerepmap (list-length (eval mapname)) (list-length (car (eval mapname))))
 		)
 	)
-	(setq currentmap (append currentmap (list (makedotrepmap (cadr currentmap) (list-length (car (eval mapname)))))))
-	(Setq currentmap (append currentmap (list (maketilerepmap  (caddr currentmap) (eval mapname)))))
-	(Setq currentmap (append currentmap (list movelist)  (list nil)))
+	(setq originalmap  (append originalmap  (list (makedotrepmap (cadr originalmap ) (list-length (car (eval mapname)))))))
+	(Setq originalmap  (append originalmap  (list (maketilerepmap  (caddr originalmap ) (eval mapname)))))
+	(Setq originalmap  (append originalmap  (list (list nil)) (list (list nil))))
+	(setq gamemaps (list originalmap ))
 	(string "The game map is now set. Enter (slither) to start the game.")
 )
 
@@ -88,7 +194,10 @@
 (defun slither ()
 	(if ishuman
 		(playhumangame)
-		(playAIgame)
+		(if isTimed
+			(playTimedAIGame)
+			(playAIGame)
+		)
 	)
 )
 
@@ -96,7 +205,7 @@
 (defun playhumangame ()
 
 	(loop
-		(printstuff currentmap)
+		(printstuff (car gamemaps))
 	
 		(progn 
 			(format t "Make another move? y/n: ")
@@ -111,7 +220,7 @@
 						(format t "Your next move is: ")
 						(makemove (read) (read) (read))
 					)
-					(checkallvalidity currentmap)
+					(checkallvalidity (car gamemaps))
 				)
 				(t
 					(return "Thanks for playing!")
@@ -132,35 +241,45 @@
 
 ;;-----------------------
 (defun playAIgame ()
-
+	(setq countofstucks 0)
 	(loop
 		;;--------if they want the map printed at every point
 		(if printingwanted
-			(printstuff currentmap)
+			(printstuff (car gamemaps))
 			nil
 		)
 		
 		;;--------validate all the things------
 		(resetisAInotstuck)
-		(doAllAI currentmap)
-		(checkallvalidity currentmap)
+		(doAllAI (car gamemaps))
+		(checkallvalidity (car gamemaps))
 		
 		;;-----------if it is stuck, do something different
 		(cond
 			(isAInotstuck
-				
+				(setq countofstucks 0)
 			)
 			(t
-				(if (not printingwanted)
-					(printstuff currentmap)
+				(cond
+					((equal countofstucks 9)
+					
+					
+						(if (not printingwanted)
+							(printstuff (car gamemaps))
+						)
+						(return "The AI is stuck and the above solution is as far as it has solved. Sorry my AI isn't smarter.")
+					)
+					(
+						t
+						(setq countofstucks (+ 1 countofstucks))
+					)
 				)
-				(return "The AI is stuck and the above solution is as far as it has solved. Sorry my AI isn't smarter.")
 			)
 		)
 		
 		;;------ when the game is won ---------
 		(when isboardvalid 
-			(printstuff currentmap)
+			(printstuff (car gamemaps))
 			(if (playgameagain)
 				(slither)
 				(return "Thanks for playing!")
@@ -170,8 +289,100 @@
 	)
 )
 
+;;-----------------------
+(defun playTimedAIGame()
+	(setq countofstucks 0)
+	(loop
+		
+		;;--------validate all the things------
+		(resetisAInotstuck)
+		(checkallvalidity (car gamemaps))
+		
+		(when isboardvalid 
+			(printstuff (car gamemaps))
+			(print "Board is valid")
+			(return "Timing is now over")
+		)
+		
+		(when isaifucked
+			
+			(printstuff (car gamemaps))
+			(print "The AI is was fucked.")
+			(return "Timing is now over")
+		)
+		
+		(doAllAI (car gamemaps))
+		
+		;;------ when the game is won or AI is stuck ---------
+		(cond
+			(isAInotstuck
+				(setq countofstucks 0)
+			)
+			((not isAInotstuck)
+				(cond
+					((equal countofstucks 10)	
+						(printstuff (car gamemaps))
+						(print "The AI is stuck and the above solution is as far as it has solved. Sorry my AI isn't smarter.")
+						(return "Timing is now over")
+					)
+					(
+						t
+						(makeaguess (car gamemaps))
+						(setq countofstucks (+ 1 countofstucks))
+					)
+				)
+			)
+		)
+	)
+)
+
 ;;------------------------
 
+(defun makeaguess (currentmap)
+
+	(deepcopycurrentgame currentmap)
+	(setq linetoguesson (findintersectiontoguesswith (caddr (car gamemaps)) (cadr (cddddr (car gamemaps)))))
+	(cond
+		( 
+			(equal linetoguesson nil)
+			(setq isaifucked t)
+		)
+		(
+			t
+			(addtoguesslist currentmap linetoguesson)
+			(rplaca (car linetoguesson) 'line)
+			(addtomovelist (cadr linetoguesson) 'line '"guess by the AI, so empty -> line.")
+			(isAInotstuck t)
+		)
+	)
+	
+)
+
+(defun addtoguesslist (currentmap linetoadd)
+
+	(rplaca (cdr (cddddr currentmap)) (append (list linetoadd) (cadr (Cddddr currentmap))))
+	
+)
+
+
+;;-----MOVE SOMEWHERE ELSE
+	(cond
+		(
+			notdoanything
+			(rplaca (car fallback) 'line)
+			(print "using fallback")
+			(addtomovelist (cadr fallback) 'line '"guess by the AI, so empty -> line.")
+			(isAInotstuck t)
+		)
+	)
+	
+	
+	
+
+
+
+
+;;------------------------
 (defun printstuff (currentmap)
 	(printmap currentmap)
 	(printmovelist (car (cddddr currentmap)))
@@ -668,7 +879,6 @@
 )
 
 ;;------------------------
-;;THIS NEEDS TO BE CHANGED
 (defun checkdot ( dottocheck )
 
 	(setq countoflines (ccount '(line) dottocheck))
@@ -677,13 +887,17 @@
 
 	(cond
 		(
-			(equal countoflines 4) 
-			;;(setq isaifucked t)
+			(equal countoflines 4)
+			(print "Bad dot")
+			(print dottocheck) 
+			(setq isaifucked t)
 			(aredotsvalid nil)
 		)
 		(
 			(equal countoflines 3) 
-			;;(Setq isaifucked t)
+			(print "Bad dot")
+			(print dottocheck) 
+			(Setq isaifucked t)
 			(aredotsvalid nil)
 		)
 		(
@@ -692,6 +906,9 @@
 		)
 		(
 			(equal countoflines 1)
+			(if (equal countofxs 3)
+				(Setq isaifucked t)
+			)
 			(aredotsvalid nil)
 		)
 		(
@@ -719,12 +936,11 @@
 
 (defun addtomovelist (placeyouchanged whatyouchangedto whyyouchangedit)
 
-	(Setq movelist (append movelist (list (list placeyouchanged whatyouchangedto whyyouchangedit))))
+	(rplaca (cddddr (Car gamemaps)) (append (car (cddddr (car gamemaps))) (list (list placeyouchanged whatyouchangedto whyyouchangedit))))
 
 )
 
 ;;------------------------
-;;THIS NEEDS TO BE CHANGED ;;I AM HERE
 
 (defun tileAI ( tiletocheck )
 
@@ -827,7 +1043,9 @@
 					;;BAD
 					;;which could happen because corners or something
 					;;bad juju
-					;;(print tiletocheck)
+					(print "Bad tile")
+					(print tiletocheck)
+					(setq isaifucked t)
 					(aretilesvalid nil)
 				)
 			)
@@ -837,7 +1055,9 @@
 			;;BAD
 			;;CANNOT HELP
 			;;BAD BAD BAD
-			;;(print tiletocheck)
+			(print "Bad tile")
+			(print tiletocheck)
+			(setq isaifucked t)
 			(aretilesvalid nil)
 		)
 	)	
@@ -883,7 +1103,6 @@
 
 
 ;;------------------------
-
 ;;assuming that the dots and tiles are all valid before calling this
 (defun isclosedcircut (currentmap)
 
@@ -908,7 +1127,6 @@
 
 
 ;;------------------------
-;;THIS NEEDS TO BE CHANGED
 (defun findfirstline (linerepmap)
 
 	(setq firstline nil)
@@ -930,7 +1148,6 @@
 )
 
 ;;------------------------
-;;THIS NEEDS TO BE CHANGED
 (defun findnextline (currentmap)
 
 	(cond
@@ -958,7 +1175,6 @@
 )
 
 ;;------------------------
-;;THIS NEEDS TO BE CHANGED
 (defun findlinenexttoyou (lineyouare linetoomit currentmap)
 
 	(if
@@ -974,7 +1190,6 @@
 )
 
 ;;------------------------
-;;THIS NEEDS TO BE CHANGED
 (defun findlinenexttoyouodd (lineyouare currentmap)
 
 	(setq listtoreturn '())
@@ -1050,7 +1265,6 @@
 )
 
 ;;------------------------
-;;THIS NEEDS TO BE CHANGED
 (defun findlinenexttoyoueven (lineyouare currentmap)
 
 	(setq listtoreturn '())
@@ -1126,10 +1340,9 @@
 )
 
 ;;------------------------
-;;THIS NEEDS TO BE CHANGED
 (defun returnifline (rownumber columnnumber currentmap)
 
-	(equal (car (elt (elt (cadr currentmap)) (- rownumber 1)) (- columnnumber 1)) '(line))
+	(equal (car (elt (elt (cadr currentmap) (- rownumber 1)) (- columnnumber 1))) '(line))
 )
 
 ;;------------------------
@@ -1635,59 +1848,25 @@ Winning a game:
 
 (makemap 'map1  '((2 2) (2 2)))
 (makemap 'map2 '((1 0) (3 @) (2 @)))
-(makemap 'map3 '((2 2 @ @ @) (@ 2 @ 2 2) (@ @ 3 @ @) (@ @ 0 @ @) (3 @ 3 @ @)) )
-(makemap 'map4 '((4)))
-(makemap 'map5 '((@ @) (3 3)))
-(makemap 'map6 '( (2 2 3 @ @) (2 @ @ 1 2) (2 @ 2 @ @) (2 2 0 2 @) (@ 3 3 @ 3)))
-(makemap 'map7 '( (@ @ 2 @ 2 @ @) (2 1 2 @ @ @ 3) (@ 2 @ 2 @ @ 3) (@ 0 2 @ 3 2 3) (@ 2 @ 2 0 @ 1) (3 @ 3 3 @ @ 2) (@ 2 @ @ @ @ @ )))
-(makemap 'map8 '( 
-(@ 2 @ @ @ 3 2 @ 2 @ 2 3 2 3 3 2 2 @ 1 2 2 2 1 2 @) 
-(@ 2 2 1 2 @ 2 @ 2 3 2 3 1 @ @ 2 @ @ @ @ @ @ 2 @ @)
-(1 2 @ @ @ @ @ 2 @ @ @ 2 @ 2 @ 2 @ 1 2 2 @ 3 1 3 @)
-(3 2 2 @ @ 2 @ 2 @ 2 3 @ 2 2 @ 1 3 1 3 2 @ 2 @ @ @)
-(@ 1 3 @ 3 2 @ @ @ @ 2 @ 1 @ @ @ @ @ @ @ @ @ @ @ 2)
-(3 2 2 @ @ @ 2 0 2 @ 2 @ @ @ 2 @ @ 0 @ @ @ 2 3 @ @)
-(@ 3 2 @ 2 2 1 0 @ @ 2 2 2 @ @ 1 @ 2 3 1 2 @ @ @ @)
-(@ @ 1 @ @ @ @ @ 3 2 3 2 2 @ 3 0 2 @ @ @ @ @ @ 2 0)
-(@ @ 2 @ @ @ @ 2 @ @ 1 3 @ 2 @ @ @ 2 1 @ 2 @ @ @ 0)
-(2 3 @ @ 0 1 1 3 2 2 @ 2 @ 3 @ @ @ @ 2 @ @ @ @ @ @)
-(@ 2 @ @ 2 @ 2 3 0 @ 1 @ 2 1 @ 2 2 3 1 @ 2 3 @ @ @)
-(@ 2 1 @ 3 2 @ @ @ @ 2 @ @ @ @ 3 @ 3 @ @ @ @ @ 2 2)
-(@ @ @ @ 1 @ 2 2 3 2 1 2 @ @ @ @ 2 @ @ @ @ 2 @ 3 @)
-(@ 2 @ @ 2 3 2 @ @ 0 2 2 2 @ @ @ 1 3 2 @ @ 2 1 2 2)
-(2 0 2 2 2 @ @ @ 3 3 @ 1 @ @ 1 2 1 2 1 @ 2 2 @ @ 3)
-(@ 2 @ 1 2 1 @ @ 2 @ 2 2 @ @ 2 @ 2 @ @ 1 @ @ @ @ 3)
-(2 @ @ 2 @ 3 @ @ 3 @ 3 @ 3 1 @ @ 3 1 3 2 @ 1 1 1 3)
-(3 @ 2 @ 1 @ 1 @ @ 1 2 @ 2 2 1 2 1 2 @ 1 2 @ 2 3 @)
-(@ 2 3 2 1 2 @ @ 1 2 1 2 @ @ @ 2 @ @ @ @ @ @ 0 @ 2)
-(@ @ @ 3 @ @ 1 @ 2 @ @ @ @ @ 1 @ 2 1 @ 2 2 2 3 3 2)
-(1 @ @ 2 1 2 @ 1 @ @ 2 2 @ @ 1 2 2 1 @ @ 1 1 @ 1 @)
-(@ @ @ @ 2 2 @ 2 @ @ @ 2 2 @ 2 @ @ 2 1 @ 2 @ 2 3 @)
-(@ 1 @ @ @ @ @ 3 1 1 2 @ 1 @ @ 2 2 2 @ @ @ 2 2 @ @)
-(2 2 3 @ 2 2 1 3 @ @ 2 @ @ @ 2 2 @ @ 1 1 @ @ 1 @ @)
-(@ 2 1 2 2 @ 2 3 0 @ 2 @ 2 2 2 2 @ 3 2 @ @ @ 3 2 3)
-(@ 2 2 2 1 2 1 2 @ @ @ @ 3 1 @ @ @ 3 @ @ @ 1 @ @ @)
-(2 2 @ @ 2 @ @ 3 2 @ @ 2 2 @ 2 3 1 2 2 @ @ 3 3 2 @)))
+(makemap 'map3 '(
+(@ 2 @ 2 @)
+(@ @ @ 1 3)
+(2 2 @ @ 3)
+(2 2 1 @ 2)
+(0 @ 3 3 @)
+))
+(makemap 'map4 '(
+(@ 1 @ @ @ @ 3)
+(@ @ 3 @ 3 2 @)
+(3 0 3 2 2 1 @)
+(3 @ 3 2 @ 1 @)
+(@ 1 2 @ 1 3 @)
+(@ 3 @ @ @ @ 3)
+(@ 2 3 1 2 3 2)))
 
-(makemap 'map9
-'((@ @ 1 2 2 2 3 3 3 @)
-(2 2 2 @ 2 2 1 1 @ 2)
-(@ 3 @ 3 @ @ @ @ @ 3)
-(2 @ @ 2 1 @ @ @ @ @)
-(3 2 @ 1 0 3 @ 2 @ @)
-(@ 2 @ @ @ @ @ @ @ @)
-(@ 2 2 2 3 2 @ @ @ 2)
-(3 2 3 1 2 0 2 3 @ 2)
-(2 @ @ @ @ 2 @ @ 2 2)
-(@ @ @ @ @ 1 2 @ @ @)))
-
-(makemap 'map10 '(
-(@ @ 2 2 @ 3 @)
-(2 1 @ @ @ 2 @)
-(3 @ @ @ 3 2 @)
-(3 0 2 @ 2 @ @)
-(3 @ @ @ 1 @ 1)
-(3 @ 2 @ @ 2 @)
-(2 2 3 1 2 2 @)))
-
-
+(makemap 'map5 '(
+(2 @ @ @ @)
+(@ 3 @ 3 @)
+(@ 2 @ @ @)
+(1 3 2 @ @)
+(3 @ @ 3 @)))
