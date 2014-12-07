@@ -14,7 +14,7 @@
 	(setq newmap (append newmap (list (makedotrepmap (cadr newmap) (list-length (car (eval (car currentmap))))))))
 	(Setq newmap (append newmap (list (maketilerepmap  (caddr newmap) (eval (car currentmap))))))
 	(Setq newmap (append newmap (list (car (cddddr currentmap)))))
-	(Setq newmap (append newmap (list (list nil))))
+	(Setq newmap (append newmap (list nil)))
 	(setq gamemaps (append (list newmap) gamemaps))
 	
 )
@@ -66,18 +66,26 @@
 	(Setq nothavefallback t)
 	(Setq fallback nil)
 	(setq changing nil)
+	
 	(loop for i from 0 to (- (list-length dotrepmap) 1) do
 		(loop for j from 0 to (- (list-length (elt dotrepmap i)) 1) do
+			(setq intersectionguess (elt (elt dotrepmap i) j))
+						
 			(cond 
 				(
-					(not (equal (member (elt (elt dotrepmap i) j) restrictionlist) nil))
-					;;do nothing
-				)
-				(
 					(and (not (equal (mmember '(line) (elt (elt dotrepmap i) j)) nil)) (not (equal (mmember '(empty) (elt (elt dotrepmap i) j)) nil)))
-					(Setq changing (mmember '(empty) (elt (elt dotrepmap i) j)))
-					(Setq j (- (list-length (elt dotrepmap i)) 1))
-					(Setq i (- (list-length dotrepmap) 1))
+					(cond
+						( (equal (mmember (cadr (mmember '(empty) (elt (elt dotrepmap i) j))) restrictionlist) nil)
+							(Setq changing (mmember '(empty) (cdr (memember '(empty) (elt (elt dotrepmap i) j) ))))
+							(Setq j (- (list-length (elt dotrepmap i)) 1))
+							(Setq i (- (list-length dotrepmap) 1))
+						)
+						( t
+							(Setq changing (mmember '(empty) (elt (elt dotrepmap i) j)))
+							(Setq j (- (list-length (elt dotrepmap i)) 1))
+							(Setq i (- (list-length dotrepmap) 1))
+						)
+					)
 				)
 				(	(and nothavefallback (not (equal (mmember '(empty) (elt (elt dotrepmap i) j)) nil)))
 					(setq fallback (mmember '(empty) (elt (elt dotrepmap i) j)))
@@ -90,6 +98,42 @@
 		fallback
 		changing
 	)
+)
+
+;;-----------------------
+;;gets the list with that line as the first member
+(defun memember (thingtomember thingtomemberon)
+	
+	(Setq result nil)
+	(loop for i from 0 to (- (list-length thingtomemberon) 1)  do
+		(cond
+			(	
+				(listp (elt thingtomemberon i))
+				(cond
+					(
+						(equal nil (member thingtomember (elt thingtomemberon i) :test #'equal))
+						(setq result nil)
+					)
+					(
+						t
+						(Setq result thingtomemberon)
+						(loop for j from 1 to i do
+							(setq result (cdr result))
+						)
+						(setq i (list-length thingtomemberon))
+					)
+				)
+			)
+		)
+	)
+	result
+)
+
+;;-----------------------
+;;gets the line with that thing
+(defun mmember (thingtomember thingtomemberon)
+
+	(car (memember thingtomember thingtomemberon))
 )
 
 ;;-----------------------
@@ -183,7 +227,7 @@
 	)
 	(setq originalmap  (append originalmap  (list (makedotrepmap (cadr originalmap ) (list-length (car (eval mapname)))))))
 	(Setq originalmap  (append originalmap  (list (maketilerepmap  (caddr originalmap ) (eval mapname)))))
-	(Setq originalmap  (append originalmap  (list (list nil)) (list (list nil))))
+	(Setq originalmap  (append originalmap  (list nil) (list nil)))
 	(setq gamemaps (list originalmap ))
 	(string "The game map is now set. Enter (slither) to start the game.")
 )
@@ -263,7 +307,6 @@
 				(cond
 					((equal countofstucks 9)
 					
-					
 						(if (not printingwanted)
 							(printstuff (car gamemaps))
 						)
@@ -292,7 +335,10 @@
 ;;-----------------------
 (defun playTimedAIGame()
 	(setq countofstucks 0)
+	(Setq timesfucked 0)
 	(loop
+		
+		
 		
 		;;--------validate all the things------
 		(resetisAInotstuck)
@@ -304,11 +350,24 @@
 			(return "Timing is now over")
 		)
 		
+		
 		(when isaifucked
 			
-			(printstuff (car gamemaps))
+			(erasemapswithnoguesses gamemaps)
+			;;(printstuff (car gamemaps))
+			(if (equal timesfucked 15)
+				(and (printstuff (car gamemaps)) (return "AI fucked too much"))
+				(setq timesfucked (+ 1 timesfucked))
+			)
+			
 			(print "The AI is was fucked.")
-			(return "Timing is now over")
+			
+			(dealwithbadguess (car gamemaps))
+			(setq countofstucks 0)
+			(setq isaifucked nil)
+			
+			
+		;;	(return "Timing is now over")
 		)
 		
 		(doAllAI (car gamemaps))
@@ -338,6 +397,26 @@
 
 ;;------------------------
 
+
+(defun erasemapswithnoguesses (gamemaplist)
+	(setq maxbound (- (list-length gamemaplist) 1))
+	(print maxbound)
+	(loop for i from 0 to maxbound do
+		(cond
+			(
+				(equal nil (cadr (cddddr (car gamemaplist))))
+				(Setq gamemaps (cdr gamemaplist))
+				(setq gamemaplist gamemaps)
+			)
+			(
+				t
+				(setq i maxbound)
+			)
+		)
+	)
+)
+
+;;-----------------------
 (defun makeaguess (currentmap)
 
 	(deepcopycurrentgame currentmap)
@@ -355,9 +434,66 @@
 			(isAInotstuck t)
 		)
 	)
+)
+
+;;-----------------------
+(defun resetaguess (currentmap)
+	
+	(print "reset a guess")
+	(deepcopycurrentgame currentmap)
+	(setq linetoguesson (findlinewithrep (car gamemaps) (cadar (cadr (cddddr (cadr gamemaps))))))
+	(addtoguesslist currentmap linetoguesson)
+	(rplaca (car linetoguesson) 'x)
+	(addtomovelist (cadr linetoguesson) 'x '"guess by the AI went bad and reverted, so empty -> x.")
+	(isAInotstuck t)
+	(print "end reset a guess")
+)
+
+;;-----------------------
+(defun findlinewithrep (currentmap repthing)
+
+	(print "find line with rep")
+	(loop for i from 1 to (- (list-length (cadr currentmap) ) 2) do
+		(setq thething (car (memember repthing (elt (cadr currentmap) i))))
+		(if (not (equal thething nil))
+			(setq i (- (list-length (cadr currentmap) ) 2))
+		)
+	)
+	(print thething)
+	(print "end fine line with rep")
+	thething
+)
+
+;;-----------------------
+(defun dealwithbadguess (currentmap)
+	(print "deal with bad guess")
+	(if 
+		(equal 'line (caaar (cadr (cddddr (car gamemaps)))))
+		(resetaguess currentmap)
+		(revertbackanothermap)
+	)
 	
 )
 
+;;-----------------------
+(defun dealwithbadguess2 (currentmap)
+	(print "deal with bad guess 2")
+	(if 
+		(equal 'line (caaar (cadr (cddddr (car gamemaps)))))
+		(resetaguess currentmap)
+		(makeaguess currentmap)
+	)
+)
+
+;;-----------------------
+(defun revertbackanothermap ()
+	(print "revert back another map")
+	(setq gamemaps (cdr gamemaps))
+	(dealwithbadguess2 (car gamemaps))
+	
+)
+
+;;-----------------------
 (defun addtoguesslist (currentmap linetoadd)
 
 	(rplaca (cdr (cddddr currentmap)) (append (list linetoadd) (cadr (Cddddr currentmap))))
@@ -365,27 +501,11 @@
 )
 
 
-;;-----MOVE SOMEWHERE ELSE
-	(cond
-		(
-			notdoanything
-			(rplaca (car fallback) 'line)
-			(print "using fallback")
-			(addtomovelist (cadr fallback) 'line '"guess by the AI, so empty -> line.")
-			(isAInotstuck t)
-		)
-	)
-	
-	
-	
-
-
-
-
 ;;------------------------
 (defun printstuff (currentmap)
 	(printmap currentmap)
 	(printmovelist (car (cddddr currentmap)))
+	(printguesses)
 	(dotstring)
 	(tilestring)
 	(statestring)
@@ -397,6 +517,17 @@
 	
 	(loop for i from 0 to (- (list-length movelist) 1 ) do
 		(print (elt movelist i))
+	)
+)
+
+(defun printguesses ()
+	
+	(loop for j from 0 to (- (list-length gamemaps) 1) do
+		(PRINT "map number")
+		(print (- (list-length gamemaps) j))
+		(loop for i from 0 to (- (list-length (cadr (cddddr (elt gamemaps j)))) 1 ) do
+			(print (elt (cadr (cddddr (elt gamemaps j))) i))
+		)
 	)
 )
 
@@ -500,10 +631,18 @@
 
 (defun checkallvalidity (currentmap)
 	
-	(setq validitychecks (list (checkdots (caddr currentmap)) (checktiles (cadddr currentmap))))
+	(setq validitychecks 
+		(list 
+			(checkdots (caddr currentmap)) 
+			(checktiles (cadddr currentmap)) 
+			;;(didanylinescauseclosedcircut currentmap ...)
+			(isclosedcircut currentmap nil)
+		)
+	)
+	
 	(if
-		(equal (member nil validitychecks) nil)
-		(isclosedcircut currentmap)
+		(and (equal (member nil validitychecks) nil) (equal linecount (linenum currentmap)))
+		(setq isboardvalid t)
 	)	
 	isboardvalid
 )
@@ -844,7 +983,7 @@
 
 	(cond	
 		(
-			(equal countofxs 3)
+			(and (equal countofxs 3) (equal 1 countofemptys))
 			(Setq changing (mmember '(empty) dottocheck))
 			(rplaca (car changing) 'x)
 			(addtomovelist (cadr changing) 'x '"count of x's was 3 in intersection, so empty -> x.")
@@ -864,16 +1003,18 @@
 		)
 		(
 			(equal countofxs 2)
-			(cond ( (equal countoflines 1)
-				(Setq changing (mmember '(empty) dottocheck))
-				(rplaca (car changing) 'line)
-				(addtomovelist (cadr changing) 'line '"count of x's was 2 and line was 1 in intersection, so empty -> line.")
-				(isAInotstuck t)
+			(cond 
+				( 
+					(equal countoflines 1)
+					(Setq changing (mmember '(empty) dottocheck))
+					(rplaca (car changing) 'line)
+					(addtomovelist (cadr changing) 'line '"count of x's was 2 and line was 1 in intersection, so empty -> line.")
+					(isAInotstuck t)
 				)
 			)
 		)
 		(t
-		(isAInotstuck nil)
+			(isAInotstuck nil)
 		)
 	)
 )
@@ -1104,15 +1245,20 @@
 
 ;;------------------------
 ;;assuming that the dots and tiles are all valid before calling this
-(defun isclosedcircut (currentmap)
 
+(defun isclosedcircut (currentmap linetostart)
+
+	(setq foundclosedcircut nil)
 	(cond
 		(
 			(< (linenum currentmap) 4)
 			(setq isboardvalid nil)
 		)
 		(t
-			(findfirstline (cadr currentmap))		;;firstline will now be set with some 
+			(if (equal nil linetostart)
+				(findfirstline (cadr currentmap))
+				(setq firstline linetostart)
+			)		;;firstline will now be set with some line
 			(Setq linecount 0)
 			(Setq nextline nil)
 			(setq currentline nil)
@@ -1122,7 +1268,7 @@
 		)
 	)	
 	
-	isboardvalid	
+	foundclosedcircut
 )
 
 
@@ -1161,14 +1307,23 @@
 		)
 		(	
 			(equal firstline nextline)
-			linecount
+			(setq foundclosedcircut t)
 		)
 		(t
 			(setq templine (car (findlinenexttoyou nextline currentline currentmap)))
 			(setq currentline nextline)
 			(setq nextline templine)
-			(setq linecount (+ 1 linecount))
-			(findnextline currentmap)
+			(cond
+				(
+					(equal nextline nil)
+					(setq foundclosedcircut nil)
+				)
+				(
+					t
+					(setq linecount (+ 1 linecount))
+					(findnextline currentmap)
+				)
+			)
 		)
 	)
 	linecount	
@@ -1870,3 +2025,4 @@ Winning a game:
 (@ 2 @ @ @)
 (1 3 2 @ @)
 (3 @ @ 3 @)))
+
