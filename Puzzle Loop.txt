@@ -1,3 +1,29 @@
+;;-----------------------
+(defun drawLineAI (linetodraw message isGuess previouscurrentmap )
+	
+	(rplaca (car linetodraw) 'line)
+	(addtomovelist (cadr linetodraw) 'line message)
+	(isAInotstuck t)
+	(if isguess
+		(addtoguesslist previouscurrentmap linetodraw)
+	)	
+
+	;;do "caused close loop" check
+)
+
+;;-----------------------
+(defun banLineAI (linetoban message isGuess previouscurrentmap )
+	
+	(rplaca (car linetoban) 'x)
+	(addtomovelist (cadr linetoban) 'x message)
+	(isAInotstuck t)
+	(if isguess
+		(addtoguesslist previouscurrentmap linetoban)
+	)
+	
+)
+
+;;-----------------------
 (defun deepcopyCurrentGame (currentmap)
 
 	(setq aredotsvalid nil)
@@ -428,10 +454,7 @@
 		)
 		(
 			t
-			(addtoguesslist currentmap linetoguesson)
-			(rplaca (car linetoguesson) 'line)
-			(addtomovelist (cadr linetoguesson) 'line '"guess by the AI, so empty -> line.")
-			(isAInotstuck t)
+			(drawlineAI linetoguesson '"guess by the AI, so empty -> line." t currentmap)
 		)
 	)
 )
@@ -442,10 +465,7 @@
 	(print "reset a guess")
 	(deepcopycurrentgame currentmap)
 	(setq linetoguesson (findlinewithrep (car gamemaps) (cadar (cadr (cddddr (cadr gamemaps))))))
-	(addtoguesslist currentmap linetoguesson)
-	(rplaca (car linetoguesson) 'x)
-	(addtomovelist (cadr linetoguesson) 'x '"guess by the AI went bad and reverted, so empty -> x.")
-	(isAInotstuck t)
+	(banlineai linetoguesson '"guess by the AI went bad and reverted, so empty -> x." t currentmap)
 	(print "end reset a guess")
 )
 
@@ -726,9 +746,7 @@
 			(cond
 				(
 					(equal (car changing) '(empty))
-					(rplaca changing '(line))
-					(addtomovelist (cadr changing) 'line '"top left corner on a 3 tile, so empty -> line.")
-					(isAInotstuck t)
+					(drawlineAI changing '"top left corner on a 3 tile, so empty -> line." nil nil)
 				)
 				(
 					t
@@ -740,9 +758,7 @@
 			(cond
 				(
 					(equal (car changing) '(empty))
-					(rplaca changing '(line))
-					(addtomovelist (cadr changing) 'line '"top left corner on a 3 tile, so empty -> line.")
-					(isAInotstuck t)
+					(drawlineAI changing '"top left corner on a 3 tile, so empty -> line." nil nil)
 				)
 				(
 					t
@@ -768,9 +784,7 @@
 			(cond
 				(
 					(equal (car changing) '(empty))
-					(rplaca changing '(line))
-					(addtomovelist (cadr changing) 'line '"top right corner on a 3 tile, so empty -> line.")
-					(isAInotstuck t)
+					(drawlineAI changing '"top right corner on a 3 tile, so empty -> line." nil nil)
 				)
 				(
 					t
@@ -782,9 +796,7 @@
 			(cond
 				(
 					(equal (car changing) '(empty))
-					(rplaca changing '(line))
-					(addtomovelist (cadr changing) 'line '"top right corner on a 3 tile, so empty -> line.")
-					(isAInotstuck t)
+					(drawlineAI changing '"top right corner on a 3 tile, so empty -> line." nil nil)
 				)
 				(
 					t
@@ -810,9 +822,7 @@
 			(cond
 				(
 					(equal (car changing) '(empty))
-					(rplaca changing '(line))
-					(addtomovelist (cadr changing) 'line '"bottom left corner on a 3 tile, so empty -> line.")
-					(isAInotstuck t)
+					(drawlineAI changing '"bottom left corner on a 3 tile, so empty -> line." nil nil)
 				)
 				(
 					t
@@ -824,9 +834,7 @@
 			(cond
 				(
 					(equal (car changing) '(empty))
-					(rplaca changing '(line))
-					(addtomovelist (cadr changing) 'line '"bottom left corner on a 3 tile, so empty -> line.")
-					(isAInotstuck t)
+					(drawlineAI changing '"bottom left corner on a 3 tile, so empty -> line." nil nil)
 				)
 				(
 					t
@@ -852,9 +860,7 @@
 			(cond
 				(
 					(equal (car changing) '(empty))
-					(rplaca changing '(line))
-					(addtomovelist (cadr changing) 'line '"bottom right corner on a 3 tile, so empty -> line.")
-					(isAInotstuck t)
+					(drawlineAI changing '"bottom right corner on a 3 tile, so empty -> line." nil nil)
 				)
 				(
 					t
@@ -866,9 +872,7 @@
 			(cond
 				(
 					(equal (car changing) '(empty))
-					(rplaca changing '(line))
-					(addtomovelist (cadr changing) 'line '"bottom right corner on a 3 tile, so empty -> line.")
-					(isAInotstuck t)
+					(drawlineAI changing '"bottom right corner on a 3 tile, so empty -> line." nil nil)
 				)
 				(
 					t
@@ -985,20 +989,16 @@
 		(
 			(and (equal countofxs 3) (equal 1 countofemptys))
 			(Setq changing (mmember '(empty) dottocheck))
-			(rplaca (car changing) 'x)
-			(addtomovelist (cadr changing) 'x '"count of x's was 3 in intersection, so empty -> x.")
-			(isAInotstuck t)
+			(banlineai changing '"count of x's was 3 in intersection, so empty -> x." nil nil)
 		)
 		(
 			(and (equal countoflines 2) (> countofemptys 0) )
 
 			(loop for i from 1 to countofemptys do 
 				(setq changing (mmember '(empty) dottocheck))
-				(rplaca (car changing) 'x)
-				(addtomovelist (Cadr changing) 'x '"count of lines in intersection was 2, so empty -> x.")
+				(banlineai changing '"count of lines in intersection was 2, so empty -> x." nil nil)
+				(isAInotstuck t)
 			)
-						
-			(isAInotstuck t)
 
 		)
 		(
@@ -1007,9 +1007,7 @@
 				( 
 					(equal countoflines 1)
 					(Setq changing (mmember '(empty) dottocheck))
-					(rplaca (car changing) 'line)
-					(addtomovelist (cadr changing) 'line '"count of x's was 2 and line was 1 in intersection, so empty -> line.")
-					(isAInotstuck t)
+					(drawlineAI changing '"count of x's was 2 and line was 1 in intersection, so empty -> line." nil nil)
 				)
 			)
 		)
@@ -1106,10 +1104,8 @@
 					(> countofemptys 0) 
 					(loop for i from 1 to countofemptys do 
 						(Setq changing (mmember '(empty) tiletocheck ))
-						(rplaca (Car changing) 'x)
-						(addtomovelist (cadr changing) 'x '"count of lines was equal to number in tile, so empty -> x.")
+						(banlineai changing '"count of lines was equal to number in tile, so empty -> x." nil nil)
 					)
-					(isAInotstuck t)
 				)
 				(	t
 					(isAInotstuck nil)
@@ -1123,10 +1119,8 @@
 					(and (> countofemptys 0) (equal countofxs (- 4 numberintile)))
 					(loop for i from 1 to countofemptys do 
 						(Setq changing (mmember '(empty) tiletocheck))
-						(rplaca (Car changing) 'line)
-						(addtomovelist (cadr changing) 'line '"count of x's was equal to 4 - number in tile, so empty -> line.")
+						(drawlineai changing '"count of x's was equal to 4 - number in tile, so empty -> line." nil nil)
 					)
-					(isAInotstuck t)
 				)
 				(	t
 					(isAInotstuck nil)
@@ -1780,249 +1774,3 @@
 )
 
 ;;------------------------
-(defun showgamerules ()
-	(format t 
-"Slither Link's Puzzle Loop is a game of wits, between you and the rules I will describe 
-here.
-
-The quote below is from Slither Link's exact description copied from their website:
-
-\"The rules are simple. You have to draw lines between the dots to form a single loop 
-without crossings or branches. The numbers indicate how many lines surround it.\"
-
-
-To accomplish this monumental task, the following wil explain how, coding wise, things 
-needed to accomplish such game play by my implementation such as which function calls to 
-make, how to construct a map, and specifying moves on the board.
-
-
-If any questions, comments, or concerns, feel free to contact me:
-	Meghan King
-	meghantking67@gmail.com
-
-using the subject: Slither's Puzzle Loop Question.
-
-
-
-Content sections are in this order:
-	Seeing the game rules
-	Making a map
-	Selecting a map to play
-	Printing a map before gameplay
-	Starting a game
-	Making a move
-	Winning the game
-
-==========================================================================================
-Seeing the game rules:
-
-	Game rules can be found in the README.txt file paired with the Silther implementation.
-	
-	Game rules can also be printed once the game is loaded by calling the function
-	'showgamerules' which has no arguments
-	
-		CG-USER(27): (showgamerules)
-
-		The output of this is omitted in this case.
-
-==========================================================================================
-Making a map:
-
-	Maps are structured as a a list. Each sublist is the rows, in order from top to
-	bottom, with their contents being each element (or tile) in the corresponding column 
-	of that row. Tiles that have a number should be specified with that number 
-	(0, 1, 2, 3, or 4). Tiles that have no number should be specified with the @ char.
-
-	Once a map is made, the name of the map is added to a list of all the maps created, 
-	called 'maplist'. The 'maplist' is returned each time a new map is created.
-	To create a map, use the function 'makemap' which takes two arguments:
-		1. the name of map
-		2. the contents of the map in the correct form
-		
-	Please only input maps that have a proper solution.
-
-
-
-	Example of making a map:
-
-		(+ * + * +) 
-		(* 1 * 0 *) 
-		(+ * + * +) 
-		(* 3 * @ *) 
-		(+ * + * +) 
-		(* 2 * @ *) 
-		(+ * + * +) 
-
-		The map above can be created by entering:
-
-		CG-USER(17): (makemap 'mapexample '((1 0) (3 @) (2 @)))
-		(MAP1 MAP2 MAP3 MAP4 MAP5 MAP6 MAPEXAMPLE)
-		
-
-==========================================================================================
-Selecting a map to play:
-
-	Many maps can be made, but only one map can be the game board at a time. 
-	To select a game board, use the function 'makegameboard' with one arguement:
-		1. the name of the map
-		
-			CG-USER(27): (makegameboard 'mapexample)
-			
-			(+ * + * +) 
-			(* 1 * 0 *) 
-			(+ * + * +) 
-			(* 3 * @ *) 
-			(+ * + * +) 
-			(* 2 * @ *) 
-			(+ * + * +) 
-			\"This is now the game map. Enter (slither) to start the game.\"
-	
-	
-==========================================================================================
-Printing a map before gameplay:
-
-	A map can be printed with either the contents that were input by the user, or in 
-	the format seen in \"Example of making a map\".
-	
-	To print with the contents input by ther user, enter the name of the map.
-	
-			CG-USER(17): mapexample
-			((1 0) (3 @) (2 @))
-
-	To print with the contents in the playable format, use a function 'printmap' which 
-	takes no arguments. 
-	However, there MUST be a game board already set using 
-	'makegameboard' function.
-
-			CG-USER(37): (printmap)
-
-			(+ * + * +) 
-			(* 1 * 0 *) 
-			(+ * + * +) 
-			(* 3 * @ *) 
-			(+ * + * +) 
-			(* 2 * @ *) 
-			(+ * + * +)
-
-
-==========================================================================================
-Starting a game:
-
-	After selecting a map to play (see the section of the same name above for details),
-	use the function 'slither' with no arguments. 
-	However, there MUST be a game board already set using 'makegameboard' function.
-
-			CG-USER(38): (slither)
-
-			(+ * + * +) 
-			(* 1 * 0 *) 
-			(+ * + * +) 
-			(* 3 * @ *) 
-			(+ * + * +) 
-			(* 2 * @ *) 
-			(+ * + * +) 
-			\"Intersections are valid\" 
-			\"Some tiles are not valid\" 
-			\"Board is still incorrect or not completed.\" Make another move? y/n: 
-			
-			
-==========================================================================================	
-Making a move:
-
-	After starting a game, you will be prompted if you would liek to make another move.
-	Entering the character y will allow you to enter a move.
-	Entering anything else will allow you to exit the game.
-	
-			\"Board is still incorrect or not completed.\" Make another move? y/n: y
-			Your next move it: 
-	
-	To enter a move, specify the row number, column number, and the side you would like 
-	the lined to be placed (T top, L left, B bottom, R right)
-	
-			Your next move it: 2 2 L
-			
-			(+ * + * +) 
-			(* 1 * 0 *) 
-			(+ * + * +) 
-			(* 3 I @ *) 
-			(+ * + * +) 
-			(* 2 * @ *) 
-			(+ * + * +) 
-			\"Some intersections are not valid\" 
-			\"Some tiles are not valid\" 
-			\"Board is still incorrect or not completed.\" Make another move? y/n
-	
-	This will draw a line in the place that you have specified: 
-		the second row, second column, Left side
-		
-	This same move could have been accomplished with 2 1 R.
-
-
-==========================================================================================
-Restarting a game after exit:
-
-	A game that was currently being played, but you chose to make no more moves (either
-	by accident or on purpose) can be reset to the state you left it at by using the
-	function 'slither'
-	
-			CG-USER(23): (slither)
-
-			(+ = + * +) 
-			(* 2 * 2 *) 
-			(+ * + * +) 
-			(* 2 * 2 *) 
-			(+ * + * +) 
-			\"Some intersections are not valid\" 
-			\"Some tiles are not valid\" 
-			\"Board is still incorrect or not completed.\" Make another move? y/n: 
-
-==========================================================================================
-Winning a game:
-
-	A game is won by completing the board following the Slither's Puzzle Loop rules.
-	The game should correctly determine if you have completed the board successfully.
-	A dialog box will ask you if you want to play another board. 
-	, you will be prompted to ask the play another map.
-	A list of all the map names will be printed, and you can enter which map you would 
-	like to select.
-	
-			
-			You've won! Do you want to play another board?
-			Choose a map: map1 map2 map3 map4 map5 map6 mapexample
-			
-	Type in the map name, and the process starts all over again.
-	
-	
-================================== Thanks for playing! ==================================")
-)
-
-
-
-;;------------------------
-(setq maplist '())
-
-(makemap 'map1  '((2 2) (2 2)))
-(makemap 'map2 '((1 0) (3 @) (2 @)))
-(makemap 'map3 '(
-(@ 2 @ 2 @)
-(@ @ @ 1 3)
-(2 2 @ @ 3)
-(2 2 1 @ 2)
-(0 @ 3 3 @)
-))
-(makemap 'map4 '(
-(@ 1 @ @ @ @ 3)
-(@ @ 3 @ 3 2 @)
-(3 0 3 2 2 1 @)
-(3 @ 3 2 @ 1 @)
-(@ 1 2 @ 1 3 @)
-(@ 3 @ @ @ @ 3)
-(@ 2 3 1 2 3 2)))
-
-(makemap 'map5 '(
-(2 @ @ @ @)
-(@ 3 @ 3 @)
-(@ 2 @ @ @)
-(1 3 2 @ @)
-(3 @ @ 3 @)))
-
