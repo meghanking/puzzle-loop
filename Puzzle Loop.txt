@@ -412,7 +412,7 @@
 					)
 					(
 						t
-						(makeaguess (car gamemaps))
+						(makeaguess (car gamemaps) nil)
 						(setq countofstucks (+ 1 countofstucks))
 					)
 				)
@@ -443,10 +443,13 @@
 )
 
 ;;-----------------------
-(defun makeaguess (currentmap)
+(defun makeaguess (currentmap butalsoaddthese)
 
 	(deepcopycurrentgame currentmap)
-	(setq linetoguesson (findintersectiontoguesswith (caddr (car gamemaps)) (cadr (cddddr (car gamemaps)))))
+	(if (equal butalsoaddthese nil)
+		(setq linetoguesson (findintersectiontoguesswith (caddr (car gamemaps)) (cadr (cddddr (car gamemaps)))))
+		(setq linetoguesson (findintersectiontoguesswith (caddr (car gamemaps)) (append (cadr (cddddr (car gamemaps))) butalsoaddthese)))
+	)
 	(cond
 		( 
 			(equal linetoguesson nil)
@@ -488,29 +491,39 @@
 (defun dealwithbadguess (currentmap)
 	(print "deal with bad guess")
 	(if 
-		(equal 'line (caaar (cadr (cddddr (car gamemaps)))))
+		(equal 'line (caaar (cadr (cddddr currentmap))))
 		(resetaguess currentmap)
-		(revertbackanothermap)
-	)
-	
+		(if (> (list-length (cadr (cddddr currentmap))) 2)
+			 (gobacktwoguesses currentmap)
+			 (revertbackanothermap)
+		 )
+	)	
 )
 
 ;;-----------------------
-(defun dealwithbadguess2 (currentmap)
+(defun gobacktwoguesses (currentmap)
+	(print "gobacktwoguesses")
+	(setq pastguesses (cadr (cddddr currentmap)))
+	(rplaca (cdr (cddddr currentmap)) (cddr (Cadr (cddddr currentmap))))
+	(Dealwithbadguess currentmap)
+)
+
+;;-----------------------
+(defun dealwithbadguess2 (currentmap pastguesses)
 	(print "deal with bad guess 2")
 	(if 
 		(equal 'line (caaar (cadr (cddddr (car gamemaps)))))
 		(resetaguess currentmap)
-		(makeaguess currentmap)
+		(makeaguess currentmap pastguesses)
 	)
 )
 
 ;;-----------------------
 (defun revertbackanothermap ()
 	(print "revert back another map")
+	(Setq pastguesses (cadr (cddddr (car gamemaps))))
 	(setq gamemaps (cdr gamemaps))
-	(dealwithbadguess2 (car gamemaps))
-	
+	(dealwithbadguess (car gamemaps))
 )
 
 ;;-----------------------
