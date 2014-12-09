@@ -1,3 +1,5 @@
+(Setq maplist '())
+
 ;;-----------------------
 (defun drawLineAI (linetodraw message isGuess previouscurrentmap )
 	
@@ -227,22 +229,25 @@
 	(Setq isaifucked nil)
 	(cond 
 		(	t
-			(y-or-n-p "Would you like the AI to solve this map?") 
-			(if (y-or-n-p "Will this be timed?") 
-      			(cond
-      				( t
-      					(Setq istimed t) (Setq ishuman nil) (Setq printingwanted nil) (setq isAInotstuck nil)
-      				)
-      			)
-      			(cond
-      				(	(y-or-n-p "Would you like the map to be printed for every move?") 
-						(setq istimed nil) (Setq ishuman nil) (Setq printingwanted t) (setq isAInotstuck nil)
+			(if (y-or-n-p "Would you like the AI to solve this map?") 
+				(if (y-or-n-p "Will this be timed?") 
+					(cond
+						( t
+							(Setq istimed t) (Setq ishuman nil) (setq isAInotstuck nil)
+						)
 					)
-					( t
-						(setq istimed nil) (Setq ishuman nil) (Setq printingwanted nil) (setq isAInotstuck nil)
+					(cond
+						( t
+							(setq istimed nil) (Setq ishuman nil)  (setq isAInotstuck nil)
+						)
 					)
-      			)
-      		)
+				)
+				(cond
+				 (t
+				 	(Setq istimed nil) (Setq ishuman t) (setq isAInotstuck nil)
+				  )
+				)
+			)
 		)	
 	)
 	(setq originalmap 
@@ -299,6 +304,7 @@
 		)
 
 		(when isboardvalid 
+			(printstuffHumanlast (Car gamemaps))
 			(if (playgameagain)
 				(slither)
 				(return "Thanks for playing!")
@@ -312,56 +318,74 @@
 ;;-----------------------
 (defun playAIgame ()
 	(setq countofstucks 0)
+	(Setq timesAIBadState 0)
 	(loop
 		;;--------if they want the map printed at every point
-		(if printingwanted
-			(printstuff (car gamemaps))
-			nil
-		)
+		(printstuff (car gamemaps))
+
 		
 		;;--------validate all the things------
 		(resetisAInotstuck)
-		(doAllAI (car gamemaps))
 		(checkallvalidity (car gamemaps))
-		
-		;;-----------if it is stuck, do something different
-		(cond
-			(isAInotstuck
-				(setq countofstucks 0)
-			)
-			(t
-				(cond
-					((equal countofstucks 9)
-					
-						(if (not printingwanted)
-							(printstuff (car gamemaps))
-						)
-						(return "The AI is stuck and the above solution is as far as it has solved. Sorry my AI isn't smarter.")
-					)
-					(
-						t
-						(setq countofstucks (+ 1 countofstucks))
-					)
-				)
-			)
-		)
 		
 		;;------ when the game is won ---------
 		(when isboardvalid 
-			(printstuff (car gamemaps))
-			(if (playgameagain)
+			(printstuffAIlast (car gamemaps))
+			(if (playgameagainAIwon)
 				(slither)
 				(return "Thanks for playing!")
 			)
 			(return nil)
 		)
+		
+		;;------ when the AI has resulted in a bad state (ignore the curse word) ---------
+		(when isaifucked
+			
+			(erasemapswithnoguesses gamemaps)
+			
+			(if (equal timesAIBadState 10000)
+				(and (printstuff (car gamemaps)) (return "AI limit"))
+				(setq timesfucked (+ 1 timesAIBadState))
+			)
+			
+			(dealwithbadguess (car gamemaps))
+			(setq countofstucks 0)
+			(setq isaifucked nil)
+		)
+		
+		(doAllAI (car gamemaps))
+		
+		;;----------- if it is stuck, do something different make a guess
+		(cond
+			(isAInotstuck
+				(setq countofstucks 0)
+			)
+			((not isAInotstuck)
+				(cond
+					((equal countofstucks 9)
+					
+						(printstuffAIlast (car gamemaps))
+						
+						(if (playgameagainAIStuck)
+							(slither)
+							(return "Thanks for playing!")
+						)
+					)
+					(
+						t
+						(makeaguess (car gamemaps) nil)
+						(setq countofstucks (+ 1 countofstucks))
+					)
+				)
+			)
+		)	
 	)
 )
 
 ;;-----------------------
 (defun playTimedAIGame()
 	(setq countofstucks 0)
-	(Setq timesfucked 0)
+	(Setq timesAIBadState 0)
 	(loop
 		
 		
@@ -371,29 +395,24 @@
 		(checkallvalidity (car gamemaps))
 		
 		(when isboardvalid 
-			(printstuff (car gamemaps))
+			(printstuffAIlast (car gamemaps))
 			(print "Board is valid")
 			(return "Timing is now over")
 		)
 		
-		
+		;;------ when the AI has resulted in a bad state (ignore the curse word) ---------
 		(when isaifucked
 			
 			(erasemapswithnoguesses gamemaps)
-			;;(printstuff (car gamemaps))
-			(if (equal timesfucked 15)
-				(and (printstuff (car gamemaps)) (return "AI fucked too much"))
-				(setq timesfucked (+ 1 timesfucked))
-			)
 			
-			(print "The AI is was fucked.")
+			(if (equal timesAIBadState 10000)
+				(and (printstuff (car gamemaps)) (return "AI limit"))
+				(setq timesfucked (+ 1 timesAIBadState))
+			)
 			
 			(dealwithbadguess (car gamemaps))
 			(setq countofstucks 0)
 			(setq isaifucked nil)
-			
-			
-		;;	(return "Timing is now over")
 		)
 		
 		(doAllAI (car gamemaps))
@@ -405,8 +424,8 @@
 			)
 			((not isAInotstuck)
 				(cond
-					((equal countofstucks 10)	
-						(printstuff (car gamemaps))
+					((equal countofstucks 3000)	
+						(printstuffAIlast (car gamemaps))
 						(print "The AI is stuck and the above solution is as far as it has solved. Sorry my AI isn't smarter.")
 						(return "Timing is now over")
 					)
@@ -426,7 +445,6 @@
 
 (defun erasemapswithnoguesses (gamemaplist)
 	(setq maxbound (- (list-length gamemaplist) 1))
-	(print maxbound)
 	(loop for i from 0 to maxbound do
 		(cond
 			(
@@ -465,31 +483,26 @@
 ;;-----------------------
 (defun resetaguess (currentmap)
 	
-	(print "reset a guess")
 	(deepcopycurrentgame currentmap)
 	(setq linetoguesson (findlinewithrep (car gamemaps) (cadar (cadr (cddddr (cadr gamemaps))))))
 	(banlineai linetoguesson '"guess by the AI went bad and reverted, so empty -> x." t currentmap)
-	(print "end reset a guess")
 )
 
 ;;-----------------------
 (defun findlinewithrep (currentmap repthing)
 
-	(print "find line with rep")
 	(loop for i from 1 to (- (list-length (cadr currentmap) ) 2) do
 		(setq thething (car (memember repthing (elt (cadr currentmap) i))))
 		(if (not (equal thething nil))
 			(setq i (- (list-length (cadr currentmap) ) 2))
 		)
 	)
-	(print thething)
-	(print "end fine line with rep")
 	thething
 )
 
 ;;-----------------------
 (defun dealwithbadguess (currentmap)
-	(print "deal with bad guess")
+
 	(if 
 		(equal 'line (caaar (cadr (cddddr currentmap))))
 		(resetaguess currentmap)
@@ -502,7 +515,7 @@
 
 ;;-----------------------
 (defun gobacktwoguesses (currentmap)
-	(print "gobacktwoguesses")
+
 	(setq pastguesses (cadr (cddddr currentmap)))
 	(rplaca (cdr (cddddr currentmap)) (cddr (Cadr (cddddr currentmap))))
 	(Dealwithbadguess currentmap)
@@ -510,7 +523,7 @@
 
 ;;-----------------------
 (defun dealwithbadguess2 (currentmap pastguesses)
-	(print "deal with bad guess 2")
+
 	(if 
 		(equal 'line (caaar (cadr (cddddr (car gamemaps)))))
 		(resetaguess currentmap)
@@ -520,7 +533,7 @@
 
 ;;-----------------------
 (defun revertbackanothermap ()
-	(print "revert back another map")
+
 	(Setq pastguesses (cadr (cddddr (car gamemaps))))
 	(setq gamemaps (cdr gamemaps))
 	(dealwithbadguess (car gamemaps))
@@ -537,12 +550,34 @@
 ;;------------------------
 (defun printstuff (currentmap)
 	(printmap currentmap)
+	;;(printmovelist (car (cddddr currentmap)))
+	;;(printguesses)
+	(dotstring)
+	(tilestring)
+	(statestring)
+)
+
+(defun printstuffHumanlast (currentmap)
+	(printmap currentmap)
 	(printmovelist (car (cddddr currentmap)))
+	;;(printguesses)
+	(dotstring)
+	(tilestring)
+	(statestring)
+)
+
+
+(defun printstuffAIlast (currentmap)
+	(printmap currentmap)
+	(print "Move List")
+	(printmovelist (car (cddddr currentmap)))
+	(print "Guess List")
 	(printguesses)
 	(dotstring)
 	(tilestring)
 	(statestring)
 )
+
 
 ;;------------------------
 
@@ -556,8 +591,6 @@
 (defun printguesses ()
 	
 	(loop for j from 0 to (- (list-length gamemaps) 1) do
-		(PRINT "map number")
-		(print (- (list-length gamemaps) j))
 		(loop for i from 0 to (- (list-length (cadr (cddddr (elt gamemaps j)))) 1 ) do
 			(print (elt (cadr (cddddr (elt gamemaps j))) i))
 		)
@@ -575,11 +608,30 @@
 )
 
 
+
+(defun playgameagainAIStuck ()
+  (if (y-or-n-p "The AI is stuck and the above solution is as far as it has solved. Sorry my AI isn't smarter. Do you want to play another board?") 
+      (progn (format t "Choose a map:~%~{~a, ~}" maplist)
+             (makegameboard (read)) t)
+             nil
+	)
+)
+
+
+(defun playgameagainAIwon ()
+  (if (y-or-n-p "The AI is has won. Do you want to play another board?") 
+      (progn (format t "Choose a map:~%~{~a, ~}" maplist)
+             (makegameboard (read)) t)
+             nil
+	)
+)
+
+
 ;;------------------------
 
 (defun isinvalidrownumber (row)
 
-	(and (> row 0) (<= row (list-length (eval (car currentmap)))))
+	(and (> row 0) (<= row (list-length (eval (car (Car gamemaps))))))
 )
 
 
@@ -587,7 +639,7 @@
 
 (defun isinvalidcolnumber (col)
 
-	(and (> col 0) (<= col (list-length (car (eval (car currentmap))))))
+	(and (> col 0) (<= col (list-length (car (eval (car (Car gamemaps)))))))
 )
 
 
@@ -638,9 +690,14 @@
 	(if isMoveValid
 		(cond
 			( 
-				(equal lineinquestion '(empty))
+				(equal (car lineinquestion) '(empty))
 				(addtomovelist (list rownum colnum sidetoplaceline) 'line '"Human request")
-				(rplaca lineinquestion 'line)
+				(rplaca (Car lineinquestion) 'line)
+			)
+			( 
+				(equal (car lineinquestion) '(line))
+				(addtomovelist (list rownum colnum sidetoplaceline) 'empty '"Human request")
+				(rplaca (Car lineinquestion) 'empty)
 			)
 			(
 				t
@@ -664,19 +721,13 @@
 
 (defun checkallvalidity (currentmap)
 	
-	(setq validitychecks 
-		(list 
-			(checkdots (caddr currentmap)) 
-			(checktiles (cadddr currentmap)) 
-			;;(didanylinescauseclosedcircut currentmap ...)
-			(isclosedcircut currentmap nil)
+	(if	(and (checkdots (caddr currentmap)) (checktiles (cadddr currentmap)))
+		(if (isclosedcircut currentmap nil)
+			(setq isboardvalid t)
+			(setq isboardvalid nil)
 		)
+		(setq isboardvalid nil)
 	)
-	
-	(if
-		(and (equal (member nil validitychecks) nil) (equal linecount (linenum currentmap)))
-		(setq isboardvalid t)
-	)	
 	isboardvalid
 )
 
@@ -1040,15 +1091,11 @@
 	(cond
 		(
 			(equal countoflines 4)
-			(print "Bad dot")
-			(print dottocheck) 
 			(setq isaifucked t)
 			(aredotsvalid nil)
 		)
 		(
-			(equal countoflines 3) 
-			(print "Bad dot")
-			(print dottocheck) 
+			(equal countoflines 3)
 			(Setq isaifucked t)
 			(aredotsvalid nil)
 		)
@@ -1183,7 +1230,6 @@
 				)
 				((> countofemptys 0)
 					;;fine
-					;;(print tiletocheck)
 					(aretilesvalid nil)
 				)
 				(t
@@ -1191,8 +1237,6 @@
 					;;BAD
 					;;which could happen because corners or something
 					;;bad juju
-					(print "Bad tile")
-					(print tiletocheck)
 					(setq isaifucked t)
 					(aretilesvalid nil)
 				)
@@ -1203,8 +1247,6 @@
 			;;BAD
 			;;CANNOT HELP
 			;;BAD BAD BAD
-			(print "Bad tile")
-			(print tiletocheck)
 			(setq isaifucked t)
 			(aretilesvalid nil)
 		)
@@ -1245,7 +1287,7 @@
 			)	
 		)
 	
-		(elt (elt linerepmap (- rownum 1)) (- colnum 1))
+		(elt (elt (cadar gamemaps) (- rownum 1)) (- colnum 1))
 
 )
 
@@ -1787,3 +1829,272 @@
 )
 
 ;;------------------------
+(defun showgamerules ()
+	(format t 
+"Slither Link's Puzzle Loop is a game of wits, between you and the rules I will describe 
+here.
+
+The quote below is from Slither Link's exact description copied from their website:
+
+\"The rules are simple. You have to draw lines between the dots to form a single loop 
+without crossings or branches. The numbers indicate how many lines surround it.\"
+
+
+To accomplish this monumental task, the following wil explain how, coding wise, things 
+needed to accomplish such game play by my implementation such as which function calls to 
+make, how to construct a map, and specifying moves on the board.
+
+
+If any questions, comments, or concerns, feel free to contact me:
+	Meghan King
+	meghantking67@gmail.com
+
+using the subject: Slither's Puzzle Loop Question.
+
+
+
+Content sections are in this order:
+	Map Names
+	Seeing the game rules
+	Making a map
+	Printing a map before gameplay
+	Selecting a map to play
+	Starting a game
+		Different game types
+	AI Game Timing
+	Human Game
+		Making a move
+		Restarting game after exiting
+		Winning the game
+
+
+==========================================================================================
+Map Names:
+Each board is named with the number the are associated with, being
+
+one
+two
+three
+four
+...
+fifteen
+
+To choose the board, which is talked about in \"Selecting a map before gameplay\" you do:
+	
+	(makegameboard 'one)
+	...
+	...
+	(makegameboard 'fifteen)
+	
+
+
+==========================================================================================
+Seeing the game rules:
+
+	Game rules can be found in the README.txt file paired with the Silther implementation.
+	
+	Game rules can also be printed once the game is loaded by calling the function
+	'showgamerules' which has no arguments
+	
+		CG-USER(27): (showgamerules)
+
+		The output of this is omitted in this case.
+
+==========================================================================================
+Making a map:
+
+	Maps are structured as a a list. Each sublist is the rows, in order from top to
+	bottom, with their contents being each element (or tile) in the corresponding column 
+	of that row. Tiles that have a number should be specified with that number 
+	(0, 1, 2, 3, or 4). Tiles that have no number should be specified with the @ char.
+
+	Once a map is made, the name of the map is added to a list of all the maps created, 
+	called 'maplist'. The 'maplist' is returned each time a new map is created.
+	To create a map, use the function 'makemap' which takes two arguments:
+		1. the name of map
+		2. the contents of the map in the correct form
+		
+	Please only input maps that have a proper solution.
+
+
+
+	Example of making a map:
+
+		(+ * + * +) 
+		(* 1 * 0 *) 
+		(+ * + * +) 
+		(* 3 * @ *) 
+		(+ * + * +) 
+		(* 2 * @ *) 
+		(+ * + * +) 
+
+		The map above can be created by entering:
+
+		CG-USER(17): (makemap 'mapexample '((1 0) (3 @) (2 @)))
+		(MAP1 MAP2 MAP3 MAP4 MAP5 MAP6 MAPEXAMPLE)
+		
+
+==========================================================================================
+Selecting a map to play:
+
+	Many maps can be made, but only one map can be the game board at a time. 
+	To select a game board, use the function 'makegameboard' with one arguement:
+		1. the name of the map
+		
+			CG-USER(27): (makegameboard 'mapexample)
+			
+			(+ * + * +) 
+			(* 1 * 0 *) 
+			(+ * + * +) 
+			(* 3 * @ *) 
+			(+ * + * +) 
+			(* 2 * @ *) 
+			(+ * + * +) 
+			\"This is now the game map. Enter (slither) to start the game.\"
+	
+	Different Game Types:
+    ======================================================================================	
+    The answer you your prompt will determine the type of game you will play:
+    
+    	The first prompt is:
+    	\"Would you like the AI to solve this map?\"
+    	
+    		Yes means AI, so you will not be able to input moves, and the AI will solve 
+    		the board.
+    		No means Human, so you will be inputting any 
+    		
+    	If you chose AI, the second prompt is:
+    	\"Will this be timed?\"
+    	
+    		Yes:
+    		This will allow for optimal times since printing is not a option until the 
+    		final solution. To actual time this, instead of calling (slither), call 
+    		(time (slither))
+    		
+    		No: This will lead to stuff being printed out every time the loop goes 
+    		through.
+
+	
+==========================================================================================
+Printing a map before gameplay:
+
+	A map can be printed with either the contents that were input by the user, or in 
+	the format seen in \"Example of making a map\".
+	
+	To print with the contents input by ther user, enter the name of the map.
+	
+			CG-USER(17): mapexample
+			((1 0) (3 @) (2 @))
+
+	To print with the contents in the playable format, use a function 'printmap' which 
+	takes no arguments. 
+	However, there MUST be a game board already set using 
+	'makegameboard' function.
+
+			CG-USER(37): (printmap)
+
+			(+ * + * +) 
+			(* 1 * 0 *) 
+			(+ * + * +) 
+			(* 3 * @ *) 
+			(+ * + * +) 
+			(* 2 * @ *) 
+			(+ * + * +)
+
+
+==========================================================================================
+Starting a game:
+
+	After selecting a map to play (see the section of the same name above for details),
+	use the function 'slither' with no arguments. 
+	However, there MUST be a game board already set using 'makegameboard' function.
+
+			CG-USER(38): (slither)
+
+			(+ * + * +) 
+			(* 1 * 0 *) 
+			(+ * + * +) 
+			(* 3 * @ *) 
+			(+ * + * +) 
+			(* 2 * @ *) 
+			(+ * + * +) 
+			\"Intersections are valid\" 
+			\"Some tiles are not valid\" 
+			\"Board is still incorrect or not completed.\" Make another move? y/n: 
+			
+AI Game:
+
+	To time a game, use the function in where printing does not occur every loop and do
+	the following. Instead of calling (slither), call (time (slither))
+
+Human Game
+	======================================================================================
+	Making a move:
+
+		After starting a game, you will be prompted if you would liek to make another 
+		move.
+		Entering the character y will allow you to enter a move.
+		Entering anything else will allow you to exit the game.
+	
+				\"Board is still incorrect or not completed.\" Make another move? y/n: y
+				Your next move it: 
+	
+		To enter a move, specify the row number, column number, and the side you would 
+		like the lined to be placed (T top, L left, B bottom, R right)
+	
+				Your next move it: 2 2 L
+			
+				(+ * + * +) 
+				(* 1 * 0 *) 
+				(+ * + * +) 
+				(* 3 I @ *) 
+				(+ * + * +) 
+				(* 2 * @ *) 
+				(+ * + * +) 
+				\"Some intersections are not valid\" 
+				\"Some tiles are not valid\" 
+				\"Board is still incorrect or not completed.\" Make another move? y/n
+	
+		This will draw a line in the place that you have specified: 
+			the second row, second column, Left side
+		
+		This same move could have been accomplished with 2 1 R.
+
+
+	======================================================================================
+	Restarting a game after exit:
+
+		A game that was currently being played, but you chose to make no more moves 
+		(eitherby accident or on purpose) can be reset to the state you left it at by 
+		using the function 'slither'
+	
+				CG-USER(23): (slither)
+
+				(+ = + * +) 
+				(* 2 * 2 *) 
+				(+ * + * +) 
+				(* 2 * 2 *) 
+				(+ * + * +) 
+				\"Some intersections are not valid\" 
+				\"Some tiles are not valid\" 
+				\"Board is still incorrect or not completed.\" Make another move? y/n: 
+
+	======================================================================================
+	Winning a game:
+
+		A game is won by completing the board following the Slither's Puzzle Loop rules.
+		The game should correctly determine if you have completed the board successfully.
+		A dialog box will ask you if you want to play another board. 
+		, you will be prompted to ask the play another map.
+		A list of all the map names will be printed, and you can enter which map you would 
+		like to select.
+	
+			
+				You've won! Do you want to play another board?
+				Choose a map: map1 map2 map3 map4 map5 map6 mapexample
+			
+		Type in the map name, and the process starts all over again.
+	
+	
+================================== Thanks for playing! ==================================")
+)
