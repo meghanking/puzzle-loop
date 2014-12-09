@@ -1,0 +1,87 @@
+1.
+; cpu time (non-gc) 0.269858 sec user, 0.025295 sec system
+; cpu time (gc)     0.000000 sec user, 0.000000 sec system
+; cpu time (total)  0.269858 sec user, 0.025295 sec system
+; real time  0.301659 sec (97.84%)
+; space allocation:
+;  7,170 cons cells, 29,672 other bytes, 0 static bytes
+; Page Faults: major: 0 (gc: 0), minor: 7187 (gc: 0)
+
+2.
+; cpu time (non-gc) 0.270718 sec user, 0.025126 sec system
+; cpu time (gc)     0.000000 sec user, 0.000000 sec system
+; cpu time (total)  0.270718 sec user, 0.025126 sec system
+; real time  0.299361 sec (98.83%)
+; space allocation:
+;  8,224 cons cells, 31,072 other bytes, 0 static bytes
+; Page Faults: major: 0 (gc: 0), minor: 7181 (gc: 0)
+
+3.
+; cpu time (non-gc) 0.264537 sec user, 0.025140 sec system
+; cpu time (gc)     0.000000 sec user, 0.000000 sec system
+; cpu time (total)  0.264537 sec user, 0.025140 sec system
+; real time  0.294750 sec (98.28%)
+; space allocation:
+;  8,937 cons cells, 33,872 other bytes, 0 static bytes
+; Page Faults: major: 0 (gc: 0), minor: 7083 (gc: 0)
+
+4.
+; cpu time (non-gc) 0.378635 sec user, 0.031803 sec system
+; cpu time (gc)     0.000000 sec user, 0.000000 sec system
+; cpu time (total)  0.378635 sec user, 0.031803 sec system
+; real time  0.416246 sec ( 98.6%)
+; space allocation:
+;  44,167 cons cells, 68,872 other bytes, 0 static bytes
+; Page Faults: major: 0 (gc: 0), minor: 7226 (gc: 0)
+
+5.
+; cpu time (non-gc) 0.434579 sec user, 0.039613 sec system
+; cpu time (gc)     0.000000 sec user, 0.000000 sec system
+; cpu time (total)  0.434579 sec user, 0.039613 sec system
+; real time  0.480172 sec (98.75%)
+; space allocation:
+;  25,184 cons cells, 54,592 other bytes, 0 static bytes
+; Page Faults: major: 0 (gc: 0), minor: 11322 (gc: 0)
+
+6.
+; cpu time (non-gc) 1.173643 sec user, 0.047620 sec system
+; cpu time (gc)     0.046807 sec user, 0.000450 sec system
+; cpu time (total)  1.220450 sec user, 0.048070 sec system
+; real time  1.282873 sec (98.88%)
+; space allocation:
+;  1,180,704 cons cells, 671,656 other bytes, 0 static bytes
+; Page Faults: major: 0 (gc: 28), minor: 12188 (gc: 28)
+
+7.
+; cpu time (non-gc) 0.289356 sec user, 0.028722 sec system
+; cpu time (gc)     0.000000 sec user, 0.000000 sec system
+; cpu time (total)  0.289356 sec user, 0.028722 sec system
+; real time  0.321948 sec ( 98.8%)
+; space allocation:
+;  43,772 cons cells, 42,280 other bytes, 0 static bytes
+; Page Faults: major: 0 (gc: 0), minor: 6638 (gc: 0)
+
+8.
+; cpu time (non-gc) 0.918072 sec user, 0.080107 sec system
+; cpu time (gc)     0.000000 sec user, 0.000000 sec system
+; cpu time (total)  0.918072 sec user, 0.080107 sec system
+; real time  1.009022 sec (98.93%)
+; space allocation:
+;  62,674 cons cells, 96,312 other bytes, 0 static bytes
+; Page Faults: major: 0 (gc: 0), minor: 23800 (gc: 0)
+
+9.
+AI Limit
+
+10.
+AI Limit
+
+11.
+
+12.
+
+13.
+
+14.
+
+15.
