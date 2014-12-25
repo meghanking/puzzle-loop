@@ -1,7 +1,3 @@
-Welcome the the README.txt for Meghan King's implementation of Slither's Puzzle Loop.
-
-==========================================================================================
-
 Slither Link's Puzzle Loop is a game of wits, between you and the rules I will describe 
 here.
 
@@ -25,14 +21,39 @@ using the subject: Slither's Puzzle Loop Question.
 
 
 Content sections are in this order:
+	Map Names
 	Seeing the game rules
 	Making a map
-	Selecting a map to play
 	Printing a map before gameplay
+	Selecting a map to play
 	Starting a game
-	Making a move
-	Restarting a game after exit
-	Winning the game
+		Different game types
+	AI Game Timing
+	Human Game
+		Making a move
+		Restarting game after exiting
+		Winning the game
+
+
+==========================================================================================
+Map Names:
+Each board is named with the number the are associated with, being
+
+one
+two
+three
+four
+...
+fifteen
+
+To choose the board, which is talked about in "Selecting a map before gameplay" you do:
+	
+	(makegameboard 'one)
+	...
+	...
+	(makegameboard 'fifteen)
+	
+
 
 ==========================================================================================
 Seeing the game rules:
@@ -76,7 +97,7 @@ Making a map:
 
 		The map above can be created by entering:
 
-		CG-USER(17): (makemap 'mapexample ''((1 0) (3 @) (2 @)))
+		CG-USER(17): (makemap 'mapexample '((1 0) (3 @) (2 @)))
 		(MAP1 MAP2 MAP3 MAP4 MAP5 MAP6 MAPEXAMPLE)
 		
 
@@ -98,6 +119,28 @@ Selecting a map to play:
 			(+ * + * +) 
 			"This is now the game map. Enter (slither) to start the game."
 	
+	Different Game Types:
+    ======================================================================================	
+    The answer you your prompt will determine the type of game you will play:
+    
+    	The first prompt is:
+    	"Would you like the AI to solve this map?"
+    	
+    		Yes means AI, so you will not be able to input moves, and the AI will solve 
+    		the board.
+    		No means Human, so you will be inputting any 
+    		
+    	If you chose AI, the second prompt is:
+    	"Will this be timed?"
+    	
+    		Yes:
+    		This will allow for optimal times since printing is not a option until the 
+    		final solution. To actual time this, instead of calling (slither), call 
+    		(time (slither))
+    		
+    		No: This will lead to stuff being printed out every time the loop goes 
+    		through.
+
 	
 ==========================================================================================
 Printing a map before gameplay:
@@ -146,72 +189,78 @@ Starting a game:
 			"Some tiles are not valid" 
 			"Board is still incorrect or not completed." Make another move? y/n: 
 			
-			
-==========================================================================================	
-Making a move:
+AI Game:
 
-	After starting a game, you will be prompted if you would liek to make another move.
-	Entering the character y will allow you to enter a move.
-	Entering anything else will allow you to exit the game.
+	To time a game, use the function in where printing does not occur every loop and do
+	the following. Instead of calling (slither), call (time (slither))
+
+Human Game
+	======================================================================================
+	Making a move:
+
+		After starting a game, you will be prompted if you would liek to make another 
+		move.
+		Entering the character y will allow you to enter a move.
+		Entering anything else will allow you to exit the game.
 	
-			"Board is still incorrect or not completed." Make another move? y/n: y
-			Your next move it: 
+				"Board is still incorrect or not completed." Make another move? y/n: y
+				Your next move it: 
 	
-	To enter a move, specify the row number, column number, and the side you would like 
-	the lined to be placed (T top, L left, B bottom, R right)
+		To enter a move, specify the row number, column number, and the side you would 
+		like the lined to be placed (T top, L left, B bottom, R right)
 	
-			Your next move it: 2 2 L
+				Your next move it: 2 2 L
 			
-			(+ * + * +) 
-			(* 1 * 0 *) 
-			(+ * + * +) 
-			(* 3 I @ *) 
-			(+ * + * +) 
-			(* 2 * @ *) 
-			(+ * + * +) 
-			"Some intersections are not valid" 
-			"Some tiles are not valid" 
-			"Board is still incorrect or not completed." Make another move? y/n
+				(+ * + * +) 
+				(* 1 * 0 *) 
+				(+ * + * +) 
+				(* 3 I @ *) 
+				(+ * + * +) 
+				(* 2 * @ *) 
+				(+ * + * +) 
+				"Some intersections are not valid" 
+				"Some tiles are not valid" 
+				"Board is still incorrect or not completed." Make another move? y/n
 	
-	This will draw a line in the place that you have specified: 
-		the second row, second column, Left side
+		This will draw a line in the place that you have specified: 
+			the second row, second column, Left side
 		
-	This same move could have been accomplished with 2 1 R.
+		This same move could have been accomplished with 2 1 R.
 
 
-==========================================================================================
-Restarting a game after exit:
+	======================================================================================
+	Restarting a game after exit:
 
-	A game that was currently being played, but you chose to make no more moves (either
-	by accident or on purpose) can be reset to the state you left it at by using the
-	function 'slither'
+		A game that was currently being played, but you chose to make no more moves 
+		(eitherby accident or on purpose) can be reset to the state you left it at by 
+		using the function 'slither'
 	
-			CG-USER(23): (slither)
+				CG-USER(23): (slither)
 
-			(+ = + * +) 
-			(* 2 * 2 *) 
-			(+ * + * +) 
-			(* 2 * 2 *) 
-			(+ * + * +) 
-			"Some intersections are not valid" 
-			"Some tiles are not valid" 
-			"Board is still incorrect or not completed." Make another move? y/n: 
+				(+ = + * +) 
+				(* 2 * 2 *) 
+				(+ * + * +) 
+				(* 2 * 2 *) 
+				(+ * + * +) 
+				"Some intersections are not valid" 
+				"Some tiles are not valid" 
+				"Board is still incorrect or not completed." Make another move? y/n: 
 
-==========================================================================================
-Winning a game:
+	======================================================================================
+	Winning a game:
 
-	A game is won by completing the board following the Slither's Puzzle Loop rules.
-	The game should correctly determine if you have completed the board successfully.
-	A dialog box will ask you if you want to play another board. 
-	, you will be prompted to ask the play another map.
-	A list of all the map names will be printed, and you can enter which map you would 
-	like to select.
+		A game is won by completing the board following the Slither's Puzzle Loop rules.
+		The game should correctly determine if you have completed the board successfully.
+		A dialog box will ask you if you want to play another board. 
+		, you will be prompted to ask the play another map.
+		A list of all the map names will be printed, and you can enter which map you would 
+		like to select.
 	
 			
-			You've won! Do you want to play another board?
-			Choose a map: map1 map2 map3 map4 map5 map6 mapexample
+				You've won! Do you want to play another board?
+				Choose a map: map1 map2 map3 map4 map5 map6 mapexample
 			
-	Type in the map name, and the process starts all over again.
+		Type in the map name, and the process starts all over again.
 	
 	
 ================================== Thanks for playing! ==================================

@@ -522,16 +522,6 @@
 )
 
 ;;-----------------------
-(defun dealwithbadguess2 (currentmap pastguesses)
-
-	(if 
-		(equal 'line (caaar (cadr (cddddr (car gamemaps)))))
-		(resetaguess currentmap)
-		(makeaguess currentmap pastguesses)
-	)
-)
-
-;;-----------------------
 (defun revertbackanothermap ()
 
 	(Setq pastguesses (cadr (cddddr (car gamemaps))))
